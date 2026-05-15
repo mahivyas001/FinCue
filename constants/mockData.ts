@@ -1,4 +1,4 @@
-import { Stock } from "@/types";
+import type { Stock, IndicatorData, StockDetail } from "@/types/stock";
 
 export const MOCK_STOCKS: Stock[] = [
   {
@@ -42,22 +42,6 @@ export const MOCK_STOCKS: Stock[] = [
     confidence: 71,
   },
 ];
-
-export interface IndicatorData {
-  rsi: number;
-  macd: "bullish" | "bearish" | "neutral";
-  movingAvg: "above" | "below";
-  volume: "high" | "normal" | "low";
-  trend: "strong" | "moderate" | "weak";
-}
-
-export interface StockDetail {
-  symbol: string;
-  indicators: IndicatorData;
-  beginnerExplanation: string;
-  advancedExplanation: string;
-  historicalNote: string;
-}
 
 export const MOCK_STOCK_DETAILS: Record<string, StockDetail> = {
   AAPL: {
