@@ -1,15 +1,5 @@
-// ─────────────────────────────────────────────
-// FinCue — useStockQuote Hook
-// ─────────────────────────────────────────────
-// Wraps the Alpha Vantage service with React
-// loading / error / data state management.
-//
-// Screens never import the service directly —
-// they always go through this hook.
-// ─────────────────────────────────────────────
-
 import { useState, useEffect, useCallback } from "react";
-import { fetchStockQuote, clearQuoteCache } from "@/services/alphaVantage";
+import { fetchStockQuote, clearQuoteCache } from "@/lib/api/alphaVantage";
 import type { Stock } from "@/types/stock";
 
 interface UseStockQuoteState {
@@ -20,7 +10,6 @@ interface UseStockQuoteState {
 }
 
 interface UseStockQuoteReturn extends UseStockQuoteState {
-  /** Re-fetch, bypassing the cache */
   refresh: () => Promise<void>;
 }
 
@@ -65,7 +54,6 @@ export function useStockQuote(symbol: string | undefined): UseStockQuoteReturn {
     [symbol]
   );
 
-  // Fetch on mount and whenever symbol changes
   useEffect(() => {
     load();
   }, [load]);
