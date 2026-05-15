@@ -110,8 +110,7 @@ export async function fetchStockQuote(
   }
 
   // ── Fetch ────────────────────────────────────
-  const url = `${API_CONFIG.ALPHA_VANTAGE_BASE_URL}?function=GLOBAL_QUOTE&symbol=${upperSymbol}&apikey=${API_CONFIG.ALPHA_VANTAGE_KEY}`;
-
+ const url = `${API_CONFIG.ALPHA_VANTAGE_BASE_URL}?function=GLOBAL_QUOTE&symbol=${upperSymbol}&apikey=${API_CONFIG.ALPHA_VANTAGE_KEY}`;
   console.log(`[AV Fetch] Requesting quote for ${upperSymbol}`);
 
   const response = await fetch(url);
@@ -183,3 +182,6 @@ export function clearQuoteCache(symbol?: string): void {
     quoteCache.clear();
   }
 }
+// Aliases for hook compatibility
+export type StockQuote = Stock;
+export const fetchQuote = fetchStockQuote;
