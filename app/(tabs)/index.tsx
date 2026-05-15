@@ -1,31 +1,42 @@
-import { StyleSheet } from 'react-native';
+import StockCard from "@/components/stock/StockCard";
+import { MOCK_STOCKS } from "@/constants/mockData";
+import { useAppStore } from "@/store/useAppStore";
+import { ScrollView, Text, View } from "react-native";
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function HomeScreen() {
+  const { mode } = useAppStore();
 
-export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
+    <ScrollView
+      className="flex-1 bg-darkBg"
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        paddingTop: 56,
+        paddingBottom: 32,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View className="flex-row items-center justify-between mb-6">
+        <View>
+          <Text className="text-white text-2xl font-bold">FinCue ✦</Text>
+          <Text className="text-neutral text-xs mt-0.5">
+            Market intelligence, simplified.
+          </Text>
+        </View>
+        <View className="bg-primary/20 px-3 py-1.5 rounded-full">
+          <Text className="text-primary text-xs font-semibold">
+            {mode === "beginner" ? "Beginner" : "Advanced"}
+          </Text>
+        </View>
+      </View>
+
+      <Text className="text-white font-semibold text-base mb-3">
+        Market Overview
+      </Text>
+
+      {MOCK_STOCKS.map((stock) => (
+        <StockCard key={stock.symbol} stock={stock} />
+      ))}
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
