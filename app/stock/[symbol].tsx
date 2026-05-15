@@ -1,3 +1,5 @@
+// app/stock/[symbol].tsx
+
 import {
   View,
   Text,
@@ -12,6 +14,7 @@ import { useStockQuote } from "@/hooks/useStockQuote";
 import SignalBadge from "@/components/ui/SignalBadge";
 import AIInsightCard from "@/components/ui/AIInsightCard";
 import IndicatorRow from "@/components/stock/IndicatorRow";
+import ChartContainer from "@/components/charts/ChartContainer";
 
 export default function StockDetailScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
@@ -69,14 +72,14 @@ export default function StockDetailScreen() {
               : "neutral",
         },
         {
-          label: "MACD",
+          label: "MACD Signal",
           value:
             detail.indicators.macd.charAt(0).toUpperCase() +
             detail.indicators.macd.slice(1),
           status: detail.indicators.macd,
         },
         {
-          label: "Moving Average",
+          label: "vs Moving Avg",
           value:
             detail.indicators.movingAvg === "above"
               ? "Above MA ↑"
@@ -85,7 +88,7 @@ export default function StockDetailScreen() {
             detail.indicators.movingAvg === "above" ? "bullish" : "bearish",
         },
         {
-          label: "Volume",
+          label: "Volume Level",
           value:
             detail.indicators.volume.charAt(0).toUpperCase() +
             detail.indicators.volume.slice(1),
@@ -225,6 +228,13 @@ export default function StockDetailScreen() {
         <Text className="text-neutral/50 text-xs mb-4">
           Updated {lastUpdated.toLocaleTimeString()}
         </Text>
+      )}
+
+      {/* ── CHART ─────────────────────────────── */}
+      {symbol && (
+        <View className="bg-slate-900 rounded-2xl p-4 mb-6">
+          <ChartContainer symbol={symbol} />
+        </View>
       )}
 
       {/* Signal badge */}
