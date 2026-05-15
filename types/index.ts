@@ -17,3 +17,9 @@ export interface WatchlistItem {
   symbol: string;
   addedAt: string;
 }
+
+export interface IndicatorRowData {
+  label: string;
+  value: string;
+  status: Signal | "info";
+}
