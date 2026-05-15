@@ -1,0 +1,56 @@
+// lib/api/backendApi.ts
+
+import { API_CONFIG } from '@/constants/config';
+
+export type Signal = 'Bullish' | 'Bearish' | 'Neutral';
+export type MACDSignal = 'Bullish' | 'Bearish' | 'Neutral';
+export type MAPosition = 'Above' | 'Below' | 'At';
+export type VolumeLevel = 'High' | 'Normal' | 'Low';
+export type TrendStrength = 'Strong' | 'Moderate' | 'Weak';
+
+export interface AnalysisIndicators {
+  rsi: number;
+  macd_signal: MACDSignal;
+  vs_moving_avg: MAPosition;
+  volume_level: VolumeLevel;
+  trend_strength: TrendStrength;
+}
+
+export interface AnalysisResult {
+  symbol: string;
+  signal: Signal;
+  confidence: number;
+  indicators: AnalysisIndicators;
+  price: number;
+  change_percent: number;
+}
+
+// 15 min cache per symbol
+const cache = new Map<string, { data: AnalysisResult; ts: number }>();
+const CACHE_TTL = 15 * 60 * 1000;
+
+export async function fetchAnalysis(symbol: string): Promise<AnalysisResult> {
+  const key = symbol.toUpperCase();
+  const cached = cache.get(key);
+
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const url = `${API_CONFIG.BACKEND_URL}/api/v1/analysis/${key}`;
+
+  const res = await fetch(url);
+
+  if (res.status === 429) throw new Error('RATE_LIMIT');
+  if (res.status === 404) throw new Error(`No data found for ${key}`);
+  if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+
+  const data: AnalysisResult = await res.json();
+  cache.set(key, { data, ts: Date.now() });
+  return data;
+}
+
+export function clearAnalysisCache(symbol?: string) {
+  if (symbol) cache.delete(symbol.toUpperCase());
+  else cache.clear();
+}
