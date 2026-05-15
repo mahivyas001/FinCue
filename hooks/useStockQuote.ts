@@ -1,64 +1,63 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchStockQuote, clearQuoteCache } from "@/lib/api/alphaVantage";
-import type { Stock } from "@/types/stock";
+import { fetchQuote, StockQuote } from "@/lib/api/alphaVantage";
 
-interface UseStockQuoteState {
-  stock: Stock | null;
-  isLoading: boolean;
-  error: string | null;
-  lastUpdated: Date | null;
-}
+export function useStockQuote(symbol: string) {
+  const [stock, setStock] = useState<StockQuote | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-interface UseStockQuoteReturn extends UseStockQuoteState {
-  refresh: () => Promise<void>;
-}
-
-export function useStockQuote(symbol: string | undefined): UseStockQuoteReturn {
-  const [state, setState] = useState<UseStockQuoteState>({
-    stock: null,
-    isLoading: false,
-    error: null,
-    lastUpdated: null,
-  });
-
-  const load = useCallback(
-    async (forceRefresh = false) => {
-      if (!symbol) return;
-
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        if (forceRefresh) {
-          clearQuoteCache(symbol);
-        }
-
-        const stock = await fetchStockQuote(symbol, forceRefresh);
-
-        setState({
-          stock,
-          isLoading: false,
-          error: null,
-          lastUpdated: new Date(),
-        });
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to load quote.";
-
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: message,
-        }));
-      }
-    },
-    [symbol]
-  );
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchQuote(symbol);
+      setStock(data);
+      setLastUpdated(new Date());
+    } catch {
+      setError("Failed to load live quote.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [symbol]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    refresh();
+  }, [refresh]);
 
-  const refresh = useCallback(() => load(true), [load]);
+  return { stock, isLoading, error, lastUpdated, refresh };
+}
 
-  return { ...state, refresh };
+export function useMultipleQuotes(symbols: string[]) {
+  const [quotes, setQuotes] = useState<Record<string, StockQuote>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results: Record<string, StockQuote> = {};
+      for (const symbol of symbols) {
+        try {
+          const data = await fetchQuote(symbol);
+          results[symbol] = data;
+          await new Promise((res) => setTimeout(res, 500));
+        } catch {
+          // skip failed symbols
+        }
+      }
+      setQuotes(results);
+    } catch {
+      setError("Failed to load quotes.");
+    } finally {
+      setLoading(false);
+    }
+  }, [symbols.join(",")]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { quotes, loading, error, refresh };
 }

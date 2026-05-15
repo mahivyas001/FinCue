@@ -43,10 +43,9 @@ export default function StockCard({ stock }: StockCardProps) {
             {currencySymbol}
             {stock.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </Text>
-          <Text className={`${changeColor} text-xs`}>
-            {changePrefix}
-            {stock.changePercent.toFixed(2)}%
-          </Text>
+          <Text className={`${changeColor} text-sm font-medium`}>
+  {changePrefix}{stock.change.toFixed(2)} ({changePrefix}{stock.changePercent.toFixed(2)}%)
+</Text>
         </View>
       </View>
 
