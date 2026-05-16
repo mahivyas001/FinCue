@@ -1,21 +1,27 @@
 import { Tabs } from "expo-router";
-import { Home, Search, Star, Settings } from "lucide-react-native";
+import { Home, Star, Search, Settings } from "lucide-react-native";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function TabLayout() {
+  const { isDark, colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#1E293B",
-          borderTopColor: "#0F172A",
+          backgroundColor: isDark ? "#0A0A0A" : "#FFFFFF",
+          borderTopColor: isDark ? "#222222" : "#E2E8F0",
+          borderTopWidth: 1,
           height: 60,
           paddingBottom: 8,
-          paddingTop: 8,
         },
-        tabBarActiveTintColor: "#4F46E5",
-        tabBarInactiveTintColor: "#64748B",
-        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.subtext,
+        tabBarLabelStyle: {
+          fontFamily: "Poppins_500Medium",
+          fontSize: 10,
+        },
       }}
     >
       <Tabs.Screen
@@ -23,7 +29,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Home color={color} size={size} />
+            <Home size={size} color={color} />
           ),
         }}
       />
@@ -32,7 +38,7 @@ export default function TabLayout() {
         options={{
           title: "Watchlist",
           tabBarIcon: ({ color, size }) => (
-            <Star color={color} size={size} />
+            <Star size={size} color={color} />
           ),
         }}
       />
@@ -41,7 +47,7 @@ export default function TabLayout() {
         options={{
           title: "Search",
           tabBarIcon: ({ color, size }) => (
-            <Search color={color} size={size} />
+            <Search size={size} color={color} />
           ),
         }}
       />
@@ -50,7 +56,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <Settings color={color} size={size} />
+            <Settings size={size} color={color} />
           ),
         }}
       />
