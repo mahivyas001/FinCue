@@ -1,5 +1,3 @@
-// app/stock/[symbol].tsx
-
 import {
   View,
   Text,
@@ -12,6 +10,8 @@ import { useAppStore } from "@/store/useAppStore";
 import { MOCK_STOCKS } from "@/constants/mockData";
 import { useStockQuote } from "@/hooks/useStockQuote";
 import { useAnalysis } from "@/hooks/useAnalysis";
+import { useAIExplanation } from "@/hooks/useAIExplanation";
+import { IndicatorInput } from "@/lib/analysis/explainIndicators";
 import SignalBadge from "@/components/ui/SignalBadge";
 import AIInsightCard from "@/components/ui/AIInsightCard";
 import IndicatorRow from "@/components/stock/IndicatorRow";
@@ -36,7 +36,6 @@ export default function StockDetailScreen() {
   // ── Fallback to mock ───────────────────────
   const mockStock = MOCK_STOCKS.find((s) => s.symbol === symbol);
 
-  // Merge: live price + real signal from backend
   const stock = liveStock
     ? {
         ...liveStock,
@@ -51,6 +50,25 @@ export default function StockDetailScreen() {
         confidence: analysis?.confidence ?? mockStock.confidence,
       }
     : null;
+
+  // ── AI Explanation ─────────────────────────
+  const indicatorInput: IndicatorInput | null = analysis
+    ? {
+        symbol: symbol ?? "",
+        signal: analysis.signal,
+        confidence: analysis.confidence,
+        rsi: analysis.indicators.rsi,
+        macd: analysis.indicators.macd_signal,
+        movingAvg: analysis.indicators.vs_moving_avg,
+        volume: analysis.indicators.volume_level,
+        trend: analysis.indicators.trend_strength,
+      }
+    : null;
+
+  const { explanation, isLoading: explanationLoading } = useAIExplanation(
+    indicatorInput,
+    mode
+  );
 
   const isWatchlisted = watchlist.some((item) => item.symbol === symbol);
   const isPositive = (stock?.change ?? 0) >= 0;
@@ -159,7 +177,6 @@ export default function StockDetailScreen() {
             </View>
           </View>
 
-          {/* Price skeleton while loading */}
           {isLoading && !stock ? (
             <View className="mt-3">
               <View className="w-36 h-8 bg-darkCard rounded-lg" />
@@ -264,7 +281,7 @@ export default function StockDetailScreen() {
         </View>
       )}
 
-      {/* Signal badge — from real backend */}
+      {/* Signal badge */}
       {stock && (
         <View className="mb-6">
           <SignalBadge
@@ -275,26 +292,19 @@ export default function StockDetailScreen() {
         </View>
       )}
 
-      {/* AI Insight — placeholder for Step 13 */}
+      {/* AI Insight — smart template explanation */}
       {stock && (
         <AIInsightCard
           symbol={stock.symbol}
           signal={analysis?.signal ?? stock.signal}
           confidence={analysis?.confidence ?? stock.confidence}
-          explanation={
-            analysisLoading
-              ? "Analyzing market data..."
-              : analysisError
-              ? "Analysis unavailable. Showing cached insight."
-              : mode === "beginner"
-              ? `This stock is showing a ${analysis?.signal ?? stock.signal} signal with ${analysis?.confidence ?? stock.confidence}% confidence based on RSI, MACD, and trend indicators.`
-              : `RSI: ${analysis?.indicators.rsi.toFixed(1) ?? "—"} · MACD: ${analysis?.indicators.macd_signal ?? "—"} · MA: ${analysis?.indicators.vs_moving_avg ?? "—"} · Volume: ${analysis?.indicators.volume_level ?? "—"} · Trend: ${analysis?.indicators.trend_strength ?? "—"}`
-          }
+          explanation={explanation}
+          isLoading={explanationLoading}
           isBeginnerMode={mode === "beginner"}
         />
       )}
 
-      {/* Technical Indicators — real backend data */}
+      {/* Technical Indicators */}
       {analysisLoading ? (
         <View className="bg-darkCard rounded-2xl px-4 py-6 mb-4 items-center">
           <ActivityIndicator color="#4F46E5" />

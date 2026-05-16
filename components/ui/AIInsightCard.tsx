@@ -1,11 +1,12 @@
-import { View, Text } from "react-native";
-import { Signal } from "@/types";
+import { View, Text, ActivityIndicator } from "react-native";
+import { Signal } from "@/types/stock";
 
 interface AIInsightCardProps {
   symbol: string;
   signal: Signal;
   confidence: number;
-  explanation: string;
+  explanation: string | null;
+  isLoading?: boolean;
   isBeginnerMode?: boolean;
 }
 
@@ -14,6 +15,7 @@ export default function AIInsightCard({
   signal,
   confidence,
   explanation,
+  isLoading = false,
   isBeginnerMode = true,
 }: AIInsightCardProps) {
   const signalColor =
@@ -55,12 +57,25 @@ export default function AIInsightCard({
       </View>
 
       {/* Explanation */}
-      <Text className="text-white/80 text-sm leading-5">{explanation}</Text>
+      {isLoading ? (
+        <View className="flex-row items-center gap-2 py-1">
+          <ActivityIndicator size="small" color="#4F46E5" />
+          <Text className="text-neutral text-sm">Analyzing indicators...</Text>
+        </View>
+      ) : (
+        <Text className="text-white/80 text-sm leading-5">
+          {explanation ?? "Analysis unavailable."}
+        </Text>
+      )}
 
-      {/* Beginner label */}
-      {isBeginnerMode && (
+      {/* Mode label */}
+      {!isLoading && (
         <View className="mt-3 flex-row items-center gap-1">
-          <Text className="text-neutral text-xs">🟢 Beginner-friendly explanation</Text>
+          <Text className="text-neutral text-xs">
+            {isBeginnerMode
+              ? "🟢 Beginner-friendly explanation"
+              : "⚡ Technical summary"}
+          </Text>
         </View>
       )}
     </View>
