@@ -28,14 +28,26 @@ export default function StockCard({
   confidence,
   market,
 }: StockCardProps) {
-  const router          = useRouter();
-  const watchlist       = useAppStore((state) => state.watchlist);
-  const toggleWatchlist = useAppStore(
-    (state) => (state as any).toggleWatchlist ?? (() => {})
-  );
-  const isSaved  = watchlist.some((item: any) => item.symbol === symbol);
+  const router             = useRouter();
+
+  // ✅ Stable selectors — each subscribes to only what it needs,
+  //    no new object references created on re-render
+  const watchlist          = useAppStore((state) => state.watchlist);
+  const addToWatchlist     = useAppStore((state) => state.addToWatchlist);
+  const removeFromWatchlist = useAppStore((state) => state.removeFromWatchlist);
+
+  // watchlist items are { symbol, addedAt } — compare by .symbol
+  const isSaved  = watchlist.some((item) => item.symbol === symbol);
   const currency = market === 'IN' ? '₹' : '$';
   const isPos    = change >= 0;
+
+  const handleWatchlistToggle = () => {
+    if (isSaved) {
+      removeFromWatchlist(symbol);
+    } else {
+      addToWatchlist(symbol);
+    }
+  };
 
   return (
     <TouchableOpacity
@@ -62,7 +74,7 @@ export default function StockCard({
       {/* Right: price + signal + star */}
       <View style={styles.right}>
         <TouchableOpacity
-          onPress={() => toggleWatchlist(symbol)}
+          onPress={handleWatchlistToggle}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Star
