@@ -1,62 +1,62 @@
-import { Tabs } from "expo-router";
-import { Home, Star, Search, Settings } from "lucide-react-native";
-import { useTheme } from "@/hooks/useTheme";
+import { Tabs } from 'expo-router';
+import { Home, Star, Search, Settings } from 'lucide-react-native';
+import { Colors } from '@/constants/colors';
 
 export default function TabLayout() {
-  const { isDark, colors } = useTheme();
-
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown:     false,
         tabBarStyle: {
-          backgroundColor: isDark ? "#0A0A0A" : "#FFFFFF",
-          borderTopColor: isDark ? "#222222" : "#E2E8F0",
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          backgroundColor:  Colors.bg.card,
+          borderTopWidth:   0.5,
+          borderTopColor:   Colors.border,
+          height:           72,
+          paddingBottom:    18,
+          paddingTop:       10,
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.subtext,
+        tabBarActiveTintColor:   Colors.bullish.primary,
+        tabBarInactiveTintColor: Colors.text.faint,
         tabBarLabelStyle: {
-          fontFamily: "Poppins_500Medium",
-          fontSize: 10,
+          fontSize:   10,
+          fontWeight: '500',
+          marginTop:  2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title:    'Home',
           tabBarIcon: ({ color, size }) => (
-            <Home size={size} color={color} />
+            <Home size={size ?? 22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="watchlist"
         options={{
-          title: "Watchlist",
+          title:    'Watchlist',
           tabBarIcon: ({ color, size }) => (
-            <Star size={size} color={color} />
+            <Star size={size ?? 22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: "Search",
+          title:    'Search',
           tabBarIcon: ({ color, size }) => (
-            <Search size={size} color={color} />
+            <Search size={size ?? 22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title:    'Settings',
           tabBarIcon: ({ color, size }) => (
-            <Settings size={size} color={color} />
+            <Settings size={size ?? 22} color={color} />
           ),
         }}
       />
