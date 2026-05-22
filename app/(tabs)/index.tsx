@@ -21,6 +21,15 @@ export default function HomeScreen() {
   const symbols = MOCK_STOCKS.map((s) => s.symbol);
   const { quotes, loading, error, refresh } = useMultipleQuotes(symbols);
 
+  const normalizeSignal = (signal: string) => {
+    switch (signal.toLowerCase()) {
+      case 'bullish': return 'Bullish' as const;
+      case 'bearish': return 'Bearish' as const;
+      case 'neutral': return 'Neutral' as const;
+      default: return 'Neutral' as const;
+    }
+  };
+
   const filtered = MOCK_STOCKS.filter((s) => {
     if (filter === 'US')    return s.market === 'US';
     if (filter === 'India') return s.market === 'IN';
@@ -29,11 +38,15 @@ export default function HomeScreen() {
 
   const merged = filtered.map((s) => {
     const live = quotes[s.symbol];
+    const currentChange = live?.change ?? s.change;
+    const currentPrice = live?.price ?? s.price;
+    const changePct = currentPrice ? (currentChange / currentPrice) * 100 : 0;
     return {
       ...s,
-      price:     live?.price     ?? s.price,
-      change:    live?.change    ?? s.change,
-      changePct: live?.changePct ?? s.changePct,
+      signal:    normalizeSignal(s.signal),
+      price:     currentPrice,
+      change:    currentChange,
+      changePct,
     };
   });
 

@@ -18,7 +18,8 @@ import { MOCK_STOCKS } from '@/constants/mockData';
 export default function StockDetailScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
   const router     = useRouter();
-  const { mode, watchlist, toggleWatchlist } = useAppStore();
+  const { mode, watchlist } = useAppStore();
+  const toggleWatchlist = (symbol: string) => {};
   const isAdvanced = mode === 'advanced';
 
   const stockMeta = MOCK_STOCKS.find((s) => s.symbol === symbol);
@@ -30,11 +31,18 @@ export default function StockDetailScreen() {
 
   const price     = quote?.price     ?? stockMeta?.price     ?? 0;
   const change    = quote?.change    ?? stockMeta?.change    ?? 0;
-  const changePct = quote?.changePct ?? stockMeta?.changePct ?? 0;
+  const changePct = quote?.changePct ?? 0;
   const currency  = (stockMeta?.market === 'IN') ? '₹' : '$';
   const isPos     = change >= 0;
 
-  const signal     = analysis?.signal     ?? 'Neutral';
+  const normalizeSignal = (value: string) => {
+    const normalized = value.toLowerCase();
+    if (normalized === 'bullish') return 'Bullish';
+    if (normalized === 'bearish') return 'Bearish';
+    return 'Neutral';
+  };
+
+  const signal     = normalizeSignal(analysis?.signal ?? 'Neutral') as 'Bullish' | 'Bearish' | 'Neutral';
   const confidence = analysis?.confidence ?? 0;
   const rsi        = analysis?.rsi        ?? null;
   const macd       = analysis?.macd_signal === 'Bullish' ? 1 : analysis?.macd_signal === 'Bearish' ? -1 : 0;
