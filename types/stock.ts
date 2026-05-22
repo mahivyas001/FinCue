@@ -7,6 +7,13 @@
 
 export type Signal = "bullish" | "bearish" | "neutral";
 export type Market = "US" | "IN";
+export type MarketType = "US" | "IN"; // alias for Market
+export type UserMode = "beginner" | "advanced";
+
+export interface WatchlistItem {
+  symbol: string;
+  addedAt: string;
+}
 
 // ── Core stock shape ──────────────────────────
 // Used in HomeScreen, WatchlistScreen, StockCard

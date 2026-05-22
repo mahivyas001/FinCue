@@ -1,7 +1,9 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { useRouter } from "expo-router";
-import type { Stock } from "@/types/stock";
+import { Stock } from "@/types/stock";
 import SignalBadge from "@/components/ui/SignalBadge";
+import { useAppStore } from "@/store/useAppStore";
+import { useTheme } from "@/hooks/useTheme";
 
 interface StockCardProps {
   stock: Stock;
@@ -9,51 +11,129 @@ interface StockCardProps {
 
 export default function StockCard({ stock }: StockCardProps) {
   const router = useRouter();
+  const { watchlist, addToWatchlist, removeFromWatchlist } = useAppStore();
+  const { colors } = useTheme();
 
+  const isWatchlisted = watchlist.some((item) => item.symbol === stock.symbol);
   const isPositive = stock.change >= 0;
-  const changeColor = isPositive ? "text-bullish" : "text-bearish";
+  const changeColor = isPositive ? "#10B981" : "#F43F5E";
   const changePrefix = isPositive ? "+" : "";
   const currencySymbol = stock.market === "IN" ? "₹" : "$";
 
   return (
     <TouchableOpacity
       onPress={() => router.push(`/stock/${stock.symbol}`)}
-      className="bg-darkCard rounded-2xl p-4 mb-3"
       activeOpacity={0.7}
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
     >
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center gap-3">
-          <View className="w-10 h-10 rounded-xl bg-primary/20 items-center justify-center">
-            <Text className="text-primary font-bold text-sm">
+      {/* Top row */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {/* Avatar */}
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "#4F46E510",
+              borderWidth: 1,
+              borderColor: "#4F46E530",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "#4F46E5",
+                fontSize: 12,
+                fontFamily: "SpaceGrotesk_700Bold",
+              }}
+            >
               {stock.symbol.slice(0, 2)}
             </Text>
           </View>
+
+          {/* Symbol + name */}
           <View>
-            <Text className="text-white font-semibold text-sm">
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 15,
+                fontFamily: "SpaceGrotesk_600SemiBold",
+              }}
+            >
               {stock.symbol}
             </Text>
-            <Text className="text-neutral text-xs" numberOfLines={1}>
+            <Text
+              style={{
+                color: colors.subtext,
+                fontSize: 11,
+                fontFamily: "Poppins_400Regular",
+              }}
+              numberOfLines={1}
+            >
               {stock.name}
             </Text>
           </View>
         </View>
 
-        <View className="items-end">
-          <Text className="text-white font-bold text-sm">
-            {currencySymbol}
-            {stock.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+        {/* Watchlist star */}
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            isWatchlisted
+              ? removeFromWatchlist(stock.symbol)
+              : addToWatchlist(stock.symbol);
+          }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 999,
+            backgroundColor: colors.cardElevated,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 14 }}>
+            {isWatchlisted ? "★" : "☆"}
           </Text>
-          <Text className={`${changeColor} text-sm font-medium`}>
-  {changePrefix}{stock.change.toFixed(2)} ({changePrefix}{stock.changePercent.toFixed(2)}%)
-</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
-      <SignalBadge
-        signal={stock.signal}
-        confidence={stock.confidence}
-        size="sm"
-      />
+      {/* Bottom row */}
+      <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <View>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 24,
+              fontFamily: "SpaceGrotesk_700Bold",
+              lineHeight: 28,
+            }}
+          >
+            {currencySymbol}{stock.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          </Text>
+          <Text
+            style={{
+              color: changeColor,
+              fontSize: 12,
+              fontFamily: "SpaceGrotesk_500Medium",
+              marginTop: 2,
+            }}
+          >
+            {changePrefix}{stock.change.toFixed(2)} ({changePrefix}{stock.changePercent.toFixed(2)}%)
+          </Text>
+        </View>
+
+        <SignalBadge signal={stock.signal} confidence={stock.confidence} size="sm" />
+      </View>
     </TouchableOpacity>
   );
 }

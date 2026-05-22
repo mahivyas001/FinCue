@@ -33,6 +33,8 @@ export function useMultipleQuotes(symbols: string[]) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const symbolKey = symbols.join(",");
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -44,7 +46,7 @@ export function useMultipleQuotes(symbols: string[]) {
           results[symbol] = data;
           await new Promise((res) => setTimeout(res, 500));
         } catch {
-          // skip failed symbols
+          // skip
         }
       }
       setQuotes(results);
@@ -53,7 +55,7 @@ export function useMultipleQuotes(symbols: string[]) {
     } finally {
       setLoading(false);
     }
-  }, [symbols.join(",")]);
+  }, [symbolKey]);
 
   useEffect(() => {
     refresh();

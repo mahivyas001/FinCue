@@ -1,5 +1,6 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useAppStore } from "@/store/useAppStore";
+import { useTheme } from "@/hooks/useTheme";
 
 const FILTERS = [
   { label: "All Markets", value: "ALL" },
@@ -9,31 +10,43 @@ const FILTERS = [
 
 export default function MarketFilterBar() {
   const { marketFilter, setMarketFilter } = useAppStore();
+  const { colors } = useTheme();
 
   return (
-    <View className="flex-row gap-2 mb-4">
-      {FILTERS.map((filter) => {
-        const isActive = marketFilter === filter.value;
-        return (
-          <TouchableOpacity
-            key={filter.value}
-            onPress={() => setMarketFilter(filter.value)}
-            className={`px-4 py-1.5 rounded-full border ${
-              isActive
-                ? "bg-primary border-primary"
-                : "bg-transparent border-darkCard"
-            }`}
-          >
-            <Text
-              className={`text-xs font-semibold ${
-                isActive ? "text-white" : "text-neutral"
-              }`}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ marginBottom: 16 }}
+    >
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {FILTERS.map((filter) => {
+          const isActive = marketFilter === filter.value;
+          return (
+            <TouchableOpacity
+              key={filter.value}
+              onPress={() => setMarketFilter(filter.value)}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+                borderRadius: 999,
+                backgroundColor: isActive ? "#4F46E5" : colors.card,
+                borderWidth: 1,
+                borderColor: isActive ? "#4F46E5" : colors.border,
+              }}
             >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+              <Text
+                style={{
+                  color: isActive ? "#FFFFFF" : colors.subtext,
+                  fontSize: 12,
+                  fontFamily: "Poppins_500Medium",
+                }}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 }

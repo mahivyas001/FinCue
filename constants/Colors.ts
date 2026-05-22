@@ -1,34 +1,71 @@
-// constants/colors.ts
-// FinCue color palette — exported as both `Colors` (original) and `COLORS` (alias)
-
 export const Colors = {
-  primary: '#4F46E5',
-  bullish: '#10B981',
-  bearish: '#F43F5E',
-  neutral: '#64748B',
-  warning: '#F59E0B',
+  // ── Backgrounds ──────────────────────────────
+  bg: {
+    base: '#111111',
+    card: '#1a1a1a',
+    elevated: '#222222',
+  },
 
-  // Dark mode
-  darkBg: '#0F172A',
-  darkCard: '#1E293B',
+  // ── Accent / Signal ──────────────────────────
+  bullish: {
+    primary: '#FFB3C6',
+    tint:    '#2a1a1e',
+    dim:     '#7a4a55',
+  },
+  bearish: {
+    primary: '#93C5FD',
+    tint:    '#161e2e',
+    dim:     '#3a5070',
+  },
+  neutral: {
+    primary: '#555555',
+    tint:    '#1a1a1a',
+    dim:     '#444444',
+  },
 
-  // Light mode
-  lightBg: '#F8FAFC',
-  lightCard: '#FFFFFF',
+  // ── Text ─────────────────────────────────────
+  text: {
+    primary:   '#FFFFFF',
+    secondary: '#AAAAAA',
+    muted:     '#888888',
+    dim:       '#555555',
+    faint:     '#444444',
+    highlight: '#DDDDDD',
+  },
 
-  // Text
-  text: '#F8FAFC',
-  textMuted: '#94A3B8',
-  textSubtle: '#64748B',
-
-  // Chart
-  chartLine: '#4F46E5',
-  chartFill: 'rgba(79, 70, 229, 0.15)',
-  chartGrid: 'rgba(148, 163, 184, 0.1)',
-  candleUp: '#10B981',
-  candleDown: '#F43F5E',
-  volume: 'rgba(79, 70, 229, 0.4)',
+  // ── UI ───────────────────────────────────────
+  border:   '#1e1e1e',
+  divider:  '#1e1e1e',
+  icon:     '#444444',
+  iconActive: '#FFB3C6',
 };
 
-// Alias — so both `import { COLORS }` and `import { Colors }` work
-export const COLORS = Colors;
+// Signal helpers — use these everywhere instead of inline conditionals
+export type SignalType = 'Bullish' | 'Bearish' | 'Neutral';
+
+export const signalColor = (signal: SignalType) => ({
+  Bullish: Colors.bullish.primary,
+  Bearish: Colors.bearish.primary,
+  Neutral: Colors.neutral.primary,
+}[signal]);
+
+export const signalTint = (signal: SignalType) => ({
+  Bullish: Colors.bullish.tint,
+  Bearish: Colors.bearish.tint,
+  Neutral: Colors.neutral.tint,
+}[signal]);
+
+export const signalDim = (signal: SignalType) => ({
+  Bullish: Colors.bullish.dim,
+  Bearish: Colors.bearish.dim,
+  Neutral: Colors.neutral.dim,
+}[signal]);
+
+// Indicator value color — positive → bullish pink, negative → bearish blue, zero/text → dim
+export const valueColor = (value: number | string | null): string => {
+  if (value === null || value === undefined) return Colors.text.faint;
+  if (typeof value === 'string') return Colors.neutral.primary;
+  if (value > 0) return Colors.bullish.primary;
+  if (value < 0) return Colors.bearish.primary;
+  return Colors.neutral.primary;
+};

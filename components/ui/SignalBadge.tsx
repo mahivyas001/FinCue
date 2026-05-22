@@ -1,5 +1,5 @@
-import { Signal } from "@/types";
-import { Text, View } from "react-native";
+import { View, Text } from "react-native";
+import { Signal } from "@/types/stock";
 
 interface SignalBadgeProps {
   signal: Signal;
@@ -13,28 +13,46 @@ export default function SignalBadge({
   size = "md",
 }: SignalBadgeProps) {
   const config = {
-    bullish: { bg: "bg-bullish/20", text: "text-bullish", label: "Bullish" },
-    bearish: { bg: "bg-bearish/20", text: "text-bearish", label: "Bearish" },
-    neutral: { bg: "bg-neutral/20", text: "text-neutral", label: "Neutral" },
+    bullish: { color: "#10B981", label: "Bullish" },
+    bearish: { color: "#F43F5E", label: "Bearish" },
+    neutral: { color: "#71717A", label: "Neutral" },
   }[signal];
 
-  const textSize = size === "sm" ? "text-xs" : "text-sm";
-  const padding = size === "sm" ? "px-2 py-0.5" : "px-3 py-1";
+  const fontSize = size === "sm" ? 10 : 12;
+  const dotSize = size === "sm" ? 5 : 6;
+  const px = size === "sm" ? 8 : 10;
+  const py = size === "sm" ? 3 : 5;
 
   return (
     <View
-      className={`${config.bg} ${padding} rounded-full flex-row items-center gap-1`}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        backgroundColor: `${config.color}15`,
+        paddingHorizontal: px,
+        paddingVertical: py,
+        borderRadius: 999,
+        alignSelf: "flex-start",
+        borderWidth: 1,
+        borderColor: `${config.color}30`,
+      }}
     >
       <View
-        className={`w-1.5 h-1.5 rounded-full ${
-          signal === "bullish"
-            ? "bg-bullish"
-            : signal === "bearish"
-              ? "bg-bearish"
-              : "bg-neutral"
-        }`}
+        style={{
+          width: dotSize,
+          height: dotSize,
+          borderRadius: 999,
+          backgroundColor: config.color,
+        }}
       />
-      <Text className={`${config.text} ${textSize} font-semibold`}>
+      <Text
+        style={{
+          color: config.color,
+          fontSize,
+          fontFamily: "Poppins_600SemiBold",
+        }}
+      >
         {config.label}
         {confidence !== undefined ? ` · ${confidence}%` : ""}
       </Text>

@@ -7,19 +7,20 @@ import {
   RefreshControl,
 } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { useAppStore } from "@/store/useAppStore";
 import { MOCK_STOCKS } from "@/constants/mockData";
 import { useMultipleQuotes } from "@/hooks/useStockQuote";
+import { useTheme } from "@/hooks/useTheme";
 import WatchlistItem from "@/components/stock/WatchlistItem";
 
 export default function WatchlistScreen() {
   const { watchlist } = useAppStore();
+  const { colors } = useTheme();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Get symbols from watchlist
   const watchlistSymbols = watchlist.map((item) => item.symbol);
-
-  // Fetch live quotes for watchlisted symbols
   const { quotes, loading, error, refresh } = useMultipleQuotes(watchlistSymbols);
 
   const onRefresh = async () => {
@@ -28,71 +29,71 @@ export default function WatchlistScreen() {
     setRefreshing(false);
   };
 
-  // Merge live quotes into mock stocks
   const watchlistStocks = MOCK_STOCKS.filter((stock) =>
     watchlist.some((item) => item.symbol === stock.symbol)
   ).map((stock) => {
     const live = quotes[stock.symbol];
     if (!live) return stock;
-    return {
-      ...stock,
-      price: live.price,
-      change: live.change,
-      changePercent: live.changePercent,
-    };
+    return { ...stock, price: live.price, change: live.change, changePercent: live.changePercent };
   });
 
   return (
     <ScrollView
-      className="flex-1 bg-darkBg"
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingTop: 56,
-        paddingBottom: 32,
-      }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 56, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#4F46E5"
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4F46E5" />
       }
     >
       {/* Header */}
-      <View className="flex-row items-center justify-between mb-1">
-        <Text className="text-white text-2xl font-bold">Watchlist</Text>
-        {loading && !refreshing && (
-          <ActivityIndicator size="small" color="#4F46E5" />
-        )}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <Text style={{ color: colors.text, fontSize: 26, fontFamily: "SpaceGrotesk_700Bold" }}>
+          Watchlist
+        </Text>
+        {loading && !refreshing && <ActivityIndicator size="small" color="#4F46E5" />}
       </View>
-      <Text className="text-neutral text-xs mb-6">
+      <Text style={{ color: colors.subtext, fontSize: 12, fontFamily: "Poppins_400Regular", marginBottom: 24 }}>
         {watchlistStocks.length} stock{watchlistStocks.length !== 1 ? "s" : ""} saved.
       </Text>
 
-      {/* Error banner */}
+      {/* Error */}
       {error && watchlistStocks.length > 0 && (
-        <View className="bg-bearish/10 border border-bearish/30 rounded-xl px-4 py-3 mb-4">
-          <Text className="text-bearish text-xs font-semibold mb-1">
+        <View style={{ backgroundColor: "#F43F5E10", borderWidth: 1, borderColor: "#F43F5E30", borderRadius: 12, padding: 12, marginBottom: 16 }}>
+          <Text style={{ color: "#F43F5E", fontSize: 11, fontFamily: "Poppins_500Medium" }}>
             Live prices unavailable
           </Text>
-          <Text className="text-neutral text-xs">Showing last known data.</Text>
-          <TouchableOpacity onPress={refresh} className="mt-1">
-            <Text className="text-primary text-xs">Tap to retry</Text>
+          <TouchableOpacity onPress={refresh}>
+            <Text style={{ color: "#4F46E5", fontSize: 11, fontFamily: "Poppins_400Regular", marginTop: 4 }}>
+              Tap to retry
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Empty state */}
       {watchlistStocks.length === 0 ? (
-        <View className="items-center py-16">
-          <Text className="text-4xl mb-4">📋</Text>
-          <Text className="text-white font-semibold text-base mb-1">
+        <View style={{ alignItems: "center", paddingVertical: 64 }}>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>⭐</Text>
+          <Text style={{ color: colors.text, fontSize: 16, fontFamily: "Poppins_600SemiBold", marginBottom: 8 }}>
             No stocks yet
           </Text>
-          <Text className="text-neutral text-sm text-center">
-            Tap the ☆ star on any stock card to add it here.
+          <Text style={{ color: colors.subtext, fontSize: 12, fontFamily: "Poppins_400Regular", textAlign: "center", marginBottom: 24 }}>
+            Tap the ☆ star on any stock card to save it here.
           </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/search")}
+            style={{
+              backgroundColor: "#4F46E5",
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 999,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 13, fontFamily: "Poppins_600SemiBold" }}>
+              Browse Stocks →
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         watchlistStocks.map((stock) => (

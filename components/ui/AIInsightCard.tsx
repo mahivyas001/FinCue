@@ -1,5 +1,6 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import { Signal } from "@/types/stock";
+import { useTheme } from "@/hooks/useTheme";
 
 interface AIInsightCardProps {
   symbol: string;
@@ -18,39 +19,67 @@ export default function AIInsightCard({
   isLoading = false,
   isBeginnerMode = true,
 }: AIInsightCardProps) {
+  const { colors } = useTheme();
+
   const signalColor =
-    signal === "bullish"
-      ? "text-bullish"
-      : signal === "bearish"
-      ? "text-bearish"
-      : "text-neutral";
-
-  const borderColor =
-    signal === "bullish"
-      ? "border-bullish/30"
-      : signal === "bearish"
-      ? "border-bearish/30"
-      : "border-neutral/30";
-
-  const bgColor =
-    signal === "bullish"
-      ? "bg-bullish/5"
-      : signal === "bearish"
-      ? "bg-bearish/5"
-      : "bg-neutral/5";
+    signal === "bullish" ? "#10B981"
+    : signal === "bearish" ? "#F43F5E"
+    : "#71717A";
 
   return (
-    <View className={`rounded-2xl p-4 border ${borderColor} ${bgColor} mb-3`}>
+    <View
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: `${signalColor}25`,
+      }}
+    >
       {/* Header */}
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-lg">✦</Text>
-          <Text className="text-white font-semibold text-sm">
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              backgroundColor: "#4F46E515",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontSize: 14 }}>✦</Text>
+          </View>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 13,
+              fontFamily: "Poppins_600SemiBold",
+            }}
+          >
             AI Insight — {symbol}
           </Text>
         </View>
-        <View className="bg-darkCard px-2 py-0.5 rounded-full">
-          <Text className={`${signalColor} text-xs font-bold`}>
+
+        <View
+          style={{
+            backgroundColor: `${signalColor}15`,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: `${signalColor}30`,
+          }}
+        >
+          <Text
+            style={{
+              color: signalColor,
+              fontSize: 10,
+              fontFamily: "SpaceGrotesk_600SemiBold",
+            }}
+          >
             {confidence}% confidence
           </Text>
         </View>
@@ -58,23 +87,30 @@ export default function AIInsightCard({
 
       {/* Explanation */}
       {isLoading ? (
-        <View className="flex-row items-center gap-2 py-1">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <ActivityIndicator size="small" color="#4F46E5" />
-          <Text className="text-neutral text-sm">Analyzing indicators...</Text>
+          <Text style={{ color: colors.subtext, fontSize: 13, fontFamily: "Poppins_400Regular" }}>
+            Analyzing indicators...
+          </Text>
         </View>
       ) : (
-        <Text className="text-white/80 text-sm leading-5">
+        <Text
+          style={{
+            color: colors.subtext,
+            fontSize: 13,
+            fontFamily: "Poppins_400Regular",
+            lineHeight: 20,
+          }}
+        >
           {explanation ?? "Analysis unavailable."}
         </Text>
       )}
 
       {/* Mode label */}
       {!isLoading && (
-        <View className="mt-3 flex-row items-center gap-1">
-          <Text className="text-neutral text-xs">
-            {isBeginnerMode
-              ? "🟢 Beginner-friendly explanation"
-              : "⚡ Technical summary"}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 10 }}>
+          <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_400Regular" }}>
+            {isBeginnerMode ? "🟢 Beginner-friendly" : "⚡ Technical summary"}
           </Text>
         </View>
       )}
