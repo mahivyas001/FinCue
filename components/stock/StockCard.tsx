@@ -1,139 +1,163 @@
-import { TouchableOpacity, View, Text } from "react-native";
-import { useRouter } from "expo-router";
-import { Stock } from "@/types/stock";
-import SignalBadge from "@/components/ui/SignalBadge";
-import { useAppStore } from "@/store/useAppStore";
-import { useTheme } from "@/hooks/useTheme";
+import React from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Star } from 'lucide-react-native';
+import { Colors, SignalType, signalColor } from '@/constants/colors';
+import SignalBadge from '@/components/ui/SignalBadge';
+import { useAppStore } from '@/store/useAppStore';
 
 interface StockCardProps {
-  stock: Stock;
+  symbol:     string;
+  name:       string;
+  price:      number;
+  change:     number;
+  changePct:  number;
+  signal:     SignalType;
+  confidence?: number;
+  market:     'US' | 'IN';
 }
 
-export default function StockCard({ stock }: StockCardProps) {
-  const router = useRouter();
-  const { watchlist, addToWatchlist, removeFromWatchlist } = useAppStore();
-  const { colors } = useTheme();
-
-  const isWatchlisted = watchlist.some((item) => item.symbol === stock.symbol);
-  const isPositive = stock.change >= 0;
-  const changeColor = isPositive ? "#10B981" : "#F43F5E";
-  const changePrefix = isPositive ? "+" : "";
-  const currencySymbol = stock.market === "IN" ? "₹" : "$";
+export default function StockCard({
+  symbol,
+  name,
+  price,
+  change,
+  changePct,
+  signal,
+  confidence,
+  market,
+}: StockCardProps) {
+  const router   = useRouter();
+  const { watchlist, toggleWatchlist } = useAppStore();
+  const isSaved  = watchlist.includes(symbol);
+  const currency = market === 'IN' ? '₹' : '$';
+  const priceColor = signalColor(signal);
+  const isPos    = change >= 0;
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/stock/${stock.symbol}`)}
-      activeOpacity={0.7}
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
+      style={styles.card}
+      onPress={() => router.push(`/stock/${symbol}`)}
+      activeOpacity={0.75}
     >
-      {/* Top row */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          {/* Avatar */}
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#4F46E510",
-              borderWidth: 1,
-              borderColor: "#4F46E530",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: "#4F46E5",
-                fontSize: 12,
-                fontFamily: "SpaceGrotesk_700Bold",
-              }}
-            >
-              {stock.symbol.slice(0, 2)}
-            </Text>
-          </View>
-
-          {/* Symbol + name */}
-          <View>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 15,
-                fontFamily: "SpaceGrotesk_600SemiBold",
-              }}
-            >
-              {stock.symbol}
-            </Text>
-            <Text
-              style={{
-                color: colors.subtext,
-                fontSize: 11,
-                fontFamily: "Poppins_400Regular",
-              }}
-              numberOfLines={1}
-            >
-              {stock.name}
-            </Text>
+      {/* Left: avatar + name */}
+      <View style={styles.left}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{symbol[0]}</Text>
+        </View>
+        <View>
+          <Text style={styles.symbol}>{symbol}</Text>
+          <Text style={styles.name} numberOfLines={1}>{name}</Text>
+          <View style={styles.tagRow}>
+            <View style={styles.marketTag}>
+              <Text style={styles.marketTagText}>{market}</Text>
+            </View>
           </View>
         </View>
-
-        {/* Watchlist star */}
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            isWatchlisted
-              ? removeFromWatchlist(stock.symbol)
-              : addToWatchlist(stock.symbol);
-          }}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 999,
-            backgroundColor: colors.cardElevated,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 14 }}>
-            {isWatchlisted ? "★" : "☆"}
-          </Text>
-        </TouchableOpacity>
       </View>
 
-      {/* Bottom row */}
-      <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-        <View>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 24,
-              fontFamily: "SpaceGrotesk_700Bold",
-              lineHeight: 28,
-            }}
-          >
-            {currencySymbol}{stock.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-          </Text>
-          <Text
-            style={{
-              color: changeColor,
-              fontSize: 12,
-              fontFamily: "SpaceGrotesk_500Medium",
-              marginTop: 2,
-            }}
-          >
-            {changePrefix}{stock.change.toFixed(2)} ({changePrefix}{stock.changePercent.toFixed(2)}%)
-          </Text>
-        </View>
+      {/* Right: price + signal + star */}
+      <View style={styles.right}>
+        <TouchableOpacity
+          onPress={() => toggleWatchlist(symbol)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Star
+            size={16}
+            color={isSaved ? Colors.bullish.primary : Colors.text.faint}
+            fill={isSaved ? Colors.bullish.primary : 'transparent'}
+          />
+        </TouchableOpacity>
 
-        <SignalBadge signal={stock.signal} confidence={stock.confidence} size="sm" />
+        <Text style={styles.price}>
+          {currency}{price.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </Text>
+
+        <Text style={[
+          styles.change,
+          { color: signalColor(signal) },
+        ]}>
+          {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePct.toFixed(2)}%)
+        </Text>
+
+        <SignalBadge signal={signal} confidence={confidence} size="sm" />
       </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.bg.card,
+    borderRadius:    16,
+    padding:         14,
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
+    marginBottom:    10,
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           12,
+    flex:          1,
+  },
+  avatar: {
+    width:           40,
+    height:          40,
+    borderRadius:    20,
+    backgroundColor: Colors.bg.elevated,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  avatarText: {
+    fontSize:   16,
+    fontWeight: '600',
+    color:      Colors.text.primary,
+  },
+  symbol: {
+    fontSize:   15,
+    fontWeight: '600',
+    color:      Colors.text.primary,
+  },
+  name: {
+    fontSize: 11,
+    color:    Colors.text.dim,
+    marginTop: 1,
+    maxWidth:  140,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    marginTop:     4,
+  },
+  marketTag: {
+    backgroundColor: Colors.bg.elevated,
+    paddingHorizontal: 6,
+    paddingVertical:   2,
+    borderRadius:      4,
+  },
+  marketTagText: {
+    fontSize:      10,
+    color:         Colors.text.dim,
+    fontWeight:    '500',
+    letterSpacing: 0.05,
+  },
+  right: {
+    alignItems: 'flex-end',
+    gap:        4,
+  },
+  price: {
+    fontSize:   15,
+    fontWeight: '600',
+    color:      Colors.text.primary,
+    marginTop:  4,
+  },
+  change: {
+    fontSize: 11,
+  },
+});

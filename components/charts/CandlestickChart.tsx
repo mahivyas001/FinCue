@@ -1,102 +1,113 @@
-// components/charts/CandlestickChart.tsx
-
 import React from 'react';
-import { View, Text, Dimensions, ScrollView } from 'react-native';
-import Svg, { Rect, Line } from 'react-native-svg';
-import { OHLCVData } from '@/lib/api/alphaVantageChart';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
+import { Colors } from '@/constants/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_HEIGHT = 180;
-const VOLUME_HEIGHT = 40;
-const CANDLE_WIDTH = 8;
-const CANDLE_GAP = 4;
-
-interface Props {
-  data: OHLCVData[];
+interface Candle {
+  date:   string;
+  open:   number;
+  high:   number;
+  low:    number;
+  close:  number;
+  volume: number;
 }
 
-export default function CandlestickChart({ data }: Props) {
-  if (!data.length) return null;
+interface CandlestickChartProps {
+  data:    Candle[];
+  height?: number;
+}
 
-  const totalWidth = Math.max(SCREEN_WIDTH - 64, data.length * (CANDLE_WIDTH + CANDLE_GAP));
-  const highs = data.map(d => d.high);
-  const lows = data.map(d => d.low);
-  const maxPrice = Math.max(...highs);
-  const minPrice = Math.min(...lows);
-  const priceRange = maxPrice - minPrice || 1;
+const CANDLE_W   = 8;
+const CANDLE_GAP = 4;
+const PADDING    = { top: 20, bottom: 40, left: 4, right: 4 };
+const VOL_H      = 28;
 
-  const maxVol = Math.max(...data.map(d => d.volume));
+export default function CandlestickChart({ data, height = 220 }: CandlestickChartProps) {
+  if (!data || data.length < 2) {
+    return (
+      <View style={[styles.empty, { height }]}>
+        <Text style={styles.emptyText}>No chart data</Text>
+      </View>
+    );
+  }
 
-  const toY = (p: number) => 10 + (1 - (p - minPrice) / priceRange) * (CHART_HEIGHT - 20);
-  const toCandleX = (i: number) => i * (CANDLE_WIDTH + CANDLE_GAP) + CANDLE_GAP;
+  const chartH = height - PADDING.top - PADDING.bottom - VOL_H - 8;
+  const prices = data.flatMap((d) => [d.high, d.low]);
+  const minP   = Math.min(...prices);
+  const maxP   = Math.max(...prices);
+  const range  = maxP - minP || 1;
 
-  // Sparse date labels
-  const step = Math.max(1, Math.floor(data.length / 5));
-  const labelIndices = Array.from({ length: Math.ceil(data.length / step) }, (_, i) => i * step);
+  const vols   = data.map((d) => d.volume);
+  const maxVol = Math.max(...vols);
+
+  const toY    = (p: number) => PADDING.top + (1 - (p - minP) / range) * chartH;
+  const totalW = data.length * (CANDLE_W + CANDLE_GAP) + PADDING.left + PADDING.right;
+
+  const labelStep = Math.max(1, Math.floor(data.length / 5));
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View>
-        <Svg width={totalWidth} height={CHART_HEIGHT}>
-          {data.map((d, i) => {
-            const isBull = d.close >= d.open;
-            const color = isBull ? '#10B981' : '#F43F5E';
-            const x = toCandleX(i);
-            const openY = toY(d.open);
-            const closeY = toY(d.close);
-            const highY = toY(d.high);
-            const lowY = toY(d.low);
-            const bodyTop = Math.min(openY, closeY);
-            const bodyH = Math.max(Math.abs(closeY - openY), 1);
-            const cx = x + CANDLE_WIDTH / 2;
+      <Svg width={totalW} height={height}>
+        {data.map((c, i) => {
+          const isUp   = c.close >= c.open;
+          const color  = isUp ? Colors.bullish.primary : Colors.bearish.primary;
+          const x      = PADDING.left + i * (CANDLE_W + CANDLE_GAP);
+          const bodyTop = toY(Math.max(c.open, c.close));
+          const bodyH   = Math.max(1, Math.abs(toY(c.open) - toY(c.close)));
+          const volBarH = (c.volume / maxVol) * VOL_H;
+          const volY    = height - PADDING.bottom - volBarH;
 
-            return (
-              <React.Fragment key={d.date}>
-                {/* Wick */}
-                <Line x1={cx} y1={highY} x2={cx} y2={lowY} stroke={color} strokeWidth={1} />
-                {/* Body */}
-                <Rect x={x} y={bodyTop} width={CANDLE_WIDTH} height={bodyH} fill={color} rx={1} />
-              </React.Fragment>
-            );
-          })}
-        </Svg>
-
-        {/* Volume bars */}
-        <Svg width={totalWidth} height={VOLUME_HEIGHT}>
-          {data.map((d, i) => {
-            const isBull = d.close >= d.open;
-            const color = isBull ? '#10B98166' : '#F43F5E66';
-            const x = toCandleX(i);
-            const barH = (d.volume / maxVol) * (VOLUME_HEIGHT - 4);
-            return (
-              <Rect key={d.date} x={x} y={VOLUME_HEIGHT - barH} width={CANDLE_WIDTH}
-                height={barH} fill={color} rx={1} />
-            );
-          })}
-        </Svg>
-
-        {/* X labels */}
-        <View style={{ flexDirection: 'row', width: totalWidth }}>
-          {labelIndices.map(i => {
-            const d = data[i];
-            if (!d) return null;
-            const dt = new Date(d.date);
-            return (
-              <Text
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: toCandleX(i),
-                  fontSize: 9,
-                  color: '#64748B',
-                }}
-              >
-                {`${dt.getMonth() + 1}/${dt.getDate()}`}
-              </Text>
-            );
-          })}
-        </View>
-      </View>
+          return (
+            <React.Fragment key={`c-${i}`}>
+              {/* Wick */}
+              <Line
+                x1={x + CANDLE_W / 2} y1={toY(c.high)}
+                x2={x + CANDLE_W / 2} y2={toY(c.low)}
+                stroke={color} strokeWidth={0.8}
+              />
+              {/* Body */}
+              <Rect
+                x={x} y={bodyTop}
+                width={CANDLE_W} height={bodyH}
+                fill={color}
+                rx={1}
+                opacity={0.85}
+              />
+              {/* Volume bar */}
+              <Rect
+                x={x} y={volY}
+                width={CANDLE_W} height={volBarH}
+                fill={color}
+                rx={1}
+                opacity={0.35}
+              />
+              {/* Date label */}
+              {i % labelStep === 0 && (
+                <SvgText
+                  x={x + CANDLE_W / 2}
+                  y={height - 6}
+                  fontSize={9}
+                  fill={Colors.text.faint}
+                  textAnchor="middle"
+                >
+                  {c.date.slice(5)}
+                </SvgText>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </Svg>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  empty: {
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 12,
+    color:    Colors.text.faint,
+  },
+});

@@ -1,89 +1,154 @@
-// components/charts/ChartContainer.tsx
-
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useAppStore } from '@/store/useAppStore';
-import { useStockChart } from '@/hooks/useStockChart';
-import { Timeframe } from '@/lib/api/alphaVantageChart';
+import React from 'react';
+import {
+  View, Text, TouchableOpacity, ActivityIndicator, StyleSheet,
+} from 'react-native';
+import { Colors } from '@/constants/colors';
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
+import { useStockChart, TimeFrame } from '@/hooks/useStockChart';
+import { useAppStore } from '@/store/useAppStore';
 
-const TIMEFRAMES: Timeframe[] = ['1W', '1M', '3M'];
+const TIMEFRAMES: TimeFrame[] = ['1W', '1M', '3M'];
 
-interface Props {
+interface ChartContainerProps {
   symbol: string;
 }
 
-export default function ChartContainer({ symbol }: Props) {
+export default function ChartContainer({ symbol }: ChartContainerProps) {
   const { mode } = useAppStore();
-  const [timeframe, setTimeframe] = useState<Timeframe>('1M');
-  const { data, isLoading, error, refresh } = useStockChart(symbol, timeframe);
   const isAdvanced = mode === 'advanced';
 
+  const [timeframe, setTimeframe] = React.useState<TimeFrame>('1W');
+  const { data, loading, error, refresh } = useStockChart(symbol, timeframe);
+
   return (
-    <View className="bg-dark-card rounded-2xl p-4 mb-4">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-white font-semibold text-base">
-          {isAdvanced ? 'Candlestick Chart' : 'Price Chart'}
-        </Text>
-        <View className="flex-row gap-2">
-          {TIMEFRAMES.map(tf => (
+    <View style={styles.wrap}>
+      {/* Timeframe pills */}
+      <View style={styles.tabs}>
+        {TIMEFRAMES.map((tf) => {
+          const active = tf === timeframe;
+          return (
             <TouchableOpacity
               key={tf}
+              style={[styles.tab, active && styles.tabActive]}
               onPress={() => setTimeframe(tf)}
-              className={`px-3 py-1 rounded-full ${
-                timeframe === tf ? 'bg-primary' : 'bg-dark-bg'
-              }`}
+              activeOpacity={0.75}
             >
-              <Text className={`text-xs font-medium ${
-                timeframe === tf ? 'text-white' : 'text-slate-400'
-              }`}>{tf}</Text>
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                {tf}
+              </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          );
+        })}
       </View>
 
       {/* Chart area */}
-      {isLoading ? (
-        <View className="h-48 items-center justify-center">
-          <ActivityIndicator color="#4F46E5" />
-          <Text className="text-slate-400 text-sm mt-2">Loading chart...</Text>
-        </View>
-      ) : error ? (
-        <View className="h-48 items-center justify-center px-4">
-          <Text className="text-rose-400 text-sm text-center mb-3">{error}</Text>
-          <TouchableOpacity
-            onPress={refresh}
-            className="bg-primary px-4 py-2 rounded-full"
-          >
-            <Text className="text-white text-sm font-medium">Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : data.length === 0 ? (
-        <View className="h-48 items-center justify-center">
-          <Text className="text-slate-400 text-sm">No chart data available</Text>
-        </View>
-      ) : isAdvanced ? (
-        <CandlestickChart data={data} />
-      ) : (
-        <LineChart data={data} />
-      )}
+      <View style={styles.chartArea}>
+        {loading ? (
+          <View style={styles.loader}>
+            <ActivityIndicator color={Colors.bullish.primary} size="small" />
+          </View>
+        ) : error ? (
+          <View style={styles.loader}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={refresh} style={styles.retryBtn}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isAdvanced ? (
+          <CandlestickChart data={data} height={200} />
+        ) : (
+          <LineChart data={data} height={160} />
+        )}
+      </View>
 
-      {/* Legend */}
-      {!isLoading && !error && data.length > 0 && isAdvanced && (
-        <View className="flex-row gap-4 mt-3">
-          {[
-            { color: '#10B981', label: 'Bullish candle' },
-            { color: '#F43F5E', label: 'Bearish candle' },
-          ].map(({ color, label }) => (
-            <View key={label} className="flex-row items-center gap-1">
-              <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: color }} />
-              <Text className="text-slate-400 text-xs">{label}</Text>
-            </View>
-          ))}
+      {/* Advanced legend */}
+      {isAdvanced && !loading && !error && (
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
+            <Text style={styles.legendLabel}>Up candle</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: Colors.bearish.primary }]} />
+            <Text style={styles.legendLabel}>Down candle</Text>
+          </View>
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: {
+    backgroundColor: Colors.bg.card,
+    borderRadius:    16,
+    padding:         14,
+    marginBottom:    14,
+  },
+  tabs: {
+    flexDirection: 'row',
+    gap:           6,
+    marginBottom:  14,
+  },
+  tab: {
+    paddingHorizontal: 14,
+    paddingVertical:    5,
+    borderRadius:      100,
+    backgroundColor:   Colors.bg.elevated,
+  },
+  tabActive: {
+    backgroundColor: Colors.bullish.primary,
+  },
+  tabLabel: {
+    fontSize:   12,
+    fontWeight: '500',
+    color:      Colors.text.dim,
+  },
+  tabLabelActive: {
+    color: '#111111',
+  },
+  chartArea: {
+    minHeight: 120,
+  },
+  loader: {
+    height:         160,
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            8,
+  },
+  errorText: {
+    fontSize: 12,
+    color:    Colors.text.faint,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical:    6,
+    backgroundColor:   Colors.bg.elevated,
+    borderRadius:      8,
+  },
+  retryText: {
+    fontSize: 12,
+    color:    Colors.bullish.primary,
+  },
+  legend: {
+    flexDirection: 'row',
+    gap:           16,
+    marginTop:     10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           5,
+  },
+  legendDot: {
+    width:        6,
+    height:       6,
+    borderRadius: 3,
+  },
+  legendLabel: {
+    fontSize: 11,
+    color:    Colors.text.faint,
+  },
+});

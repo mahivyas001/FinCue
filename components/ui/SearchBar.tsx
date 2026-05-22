@@ -1,44 +1,68 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Search, X } from 'lucide-react-native';
+import { Colors } from '@/constants/colors';
 
 interface SearchBarProps {
-  value: string;
+  value:       string;
   onChangeText: (text: string) => void;
-  onClear: () => void;
   placeholder?: string;
 }
 
 export default function SearchBar({
   value,
   onChangeText,
-  onClear,
-  placeholder = "Search stocks...",
+  placeholder = 'Search stocks…',
 }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
 
   return (
     <View
-      className={`flex-row items-center bg-darkCard rounded-2xl px-4 py-3 border ${
-        focused ? "border-primary" : "border-transparent"
-      }`}
+      style={[
+        styles.container,
+        focused && styles.containerFocused,
+      ]}
     >
-      <Text className="text-neutral text-base mr-2">🔍</Text>
+      <Search size={16} color={focused ? Colors.bullish.primary : Colors.text.faint} />
       <TextInput
+        style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         placeholder={placeholder}
-        placeholderTextColor="#64748B"
-        className="flex-1 text-white text-sm"
+        placeholderTextColor={Colors.text.faint}
         autoCapitalize="characters"
         autoCorrect={false}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={onClear}>
-          <Text className="text-neutral text-base ml-2">✕</Text>
+        <TouchableOpacity onPress={() => onChangeText('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <X size={14} color={Colors.text.dim} />
         </TouchableOpacity>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    backgroundColor: Colors.bg.card,
+    borderRadius:    12,
+    paddingHorizontal: 14,
+    paddingVertical:   11,
+    gap:             10,
+    borderWidth:     1,
+    borderColor:     'transparent',
+  },
+  containerFocused: {
+    borderColor: Colors.bullish.primary + '55',
+  },
+  input: {
+    flex:      1,
+    fontSize:  14,
+    color:     Colors.text.primary,
+    padding:   0,
+  },
+});

@@ -1,52 +1,67 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useAppStore } from "@/store/useAppStore";
-import { useTheme } from "@/hooks/useTheme";
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/colors';
 
-const FILTERS = [
-  { label: "All Markets", value: "ALL" },
-  { label: "🇺🇸 US", value: "US" },
-  { label: "🇮🇳 India", value: "IN" },
-] as const;
+type MarketFilter = 'All' | 'US' | 'India';
 
-export default function MarketFilterBar() {
-  const { marketFilter, setMarketFilter } = useAppStore();
-  const { colors } = useTheme();
+interface MarketFilterBarProps {
+  active:   MarketFilter;
+  onChange: (filter: MarketFilter) => void;
+}
 
+const FILTERS: MarketFilter[] = ['All', 'US', 'India'];
+
+export default function MarketFilterBar({ active, onChange }: MarketFilterBarProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={{ marginBottom: 16 }}
+      contentContainerStyle={styles.container}
     >
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        {FILTERS.map((filter) => {
-          const isActive = marketFilter === filter.value;
-          return (
-            <TouchableOpacity
-              key={filter.value}
-              onPress={() => setMarketFilter(filter.value)}
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 7,
-                borderRadius: 999,
-                backgroundColor: isActive ? "#4F46E5" : colors.card,
-                borderWidth: 1,
-                borderColor: isActive ? "#4F46E5" : colors.border,
-              }}
+      {FILTERS.map((f) => {
+        const isActive = f === active;
+        return (
+          <TouchableOpacity
+            key={f}
+            style={[
+              styles.pill,
+              isActive
+                ? { backgroundColor: Colors.bullish.primary }
+                : { backgroundColor: Colors.bg.card },
+            ]}
+            onPress={() => onChange(f)}
+            activeOpacity={0.75}
+          >
+            <Text
+              style={[
+                styles.label,
+                { color: isActive ? '#111111' : Colors.text.dim },
+              ]}
             >
-              <Text
-                style={{
-                  color: isActive ? "#FFFFFF" : colors.subtext,
-                  fontSize: 12,
-                  fontFamily: "Poppins_500Medium",
-                }}
-              >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+              {f}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 20,
+    gap:               8,
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingVertical:   4,
+  },
+  pill: {
+    paddingHorizontal: 16,
+    paddingVertical:   7,
+    borderRadius:      100,
+  },
+  label: {
+    fontSize:   13,
+    fontWeight: '500',
+  },
+});
