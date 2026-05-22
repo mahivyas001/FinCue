@@ -1,119 +1,131 @@
-import { View, Text, ActivityIndicator } from "react-native";
-import { Signal } from "@/types/stock";
-import { useTheme } from "@/hooks/useTheme";
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors, SignalType, signalColor, signalTint } from '@/constants/colors';
 
 interface AIInsightCardProps {
-  symbol: string;
-  signal: Signal;
+  signal: SignalType;
   confidence: number;
-  explanation: string | null;
-  isLoading?: boolean;
+  explanation: string;       // main body copy
+  triggers?: string[];       // checklist items
   isBeginnerMode?: boolean;
+  isLoading?: boolean;
 }
 
 export default function AIInsightCard({
-  symbol,
   signal,
   confidence,
   explanation,
-  isLoading = false,
+  triggers = [],
   isBeginnerMode = true,
+  isLoading = false,
 }: AIInsightCardProps) {
-  const { colors } = useTheme();
+  const color = signalColor(signal);
+  const tint  = signalTint(signal);
 
-  const signalColor =
-    signal === "bullish" ? "#10B981"
-    : signal === "bearish" ? "#F43F5E"
-    : "#71717A";
+  if (isLoading) {
+    return (
+      <View style={styles.card}>
+        <View style={[styles.shimmer, { width: '40%', marginBottom: 10 }]} />
+        <View style={[styles.shimmer, { width: '100%', marginBottom: 6 }]} />
+        <View style={[styles.shimmer, { width: '85%' }]} />
+      </View>
+    );
+  }
 
   return (
-    <View
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: `${signalColor}25`,
-      }}
-    >
+    <View style={styles.card}>
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              backgroundColor: "#4F46E515",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontSize: 14 }}>✦</Text>
-          </View>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 13,
-              fontFamily: "Poppins_600SemiBold",
-            }}
-          >
-            AI Insight — {symbol}
-          </Text>
-        </View>
-
-        <View
-          style={{
-            backgroundColor: `${signalColor}15`,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderColor: `${signalColor}30`,
-          }}
-        >
-          <Text
-            style={{
-              color: signalColor,
-              fontSize: 10,
-              fontFamily: "SpaceGrotesk_600SemiBold",
-            }}
-          >
-            {confidence}% confidence
+      <View style={styles.header}>
+        <Text style={styles.sectionLabel}>
+          {isBeginnerMode ? 'AI Insight' : 'AI Analysis'}
+        </Text>
+        <View style={[styles.confidencePill, { backgroundColor: tint }]}>
+          <Text style={[styles.confidenceText, { color }]}>
+            {confidence}% confident
           </Text>
         </View>
       </View>
 
-      {/* Explanation */}
-      {isLoading ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <ActivityIndicator size="small" color="#4F46E5" />
-          <Text style={{ color: colors.subtext, fontSize: 13, fontFamily: "Poppins_400Regular" }}>
-            Analyzing indicators...
-          </Text>
-        </View>
-      ) : (
-        <Text
-          style={{
-            color: colors.subtext,
-            fontSize: 13,
-            fontFamily: "Poppins_400Regular",
-            lineHeight: 20,
-          }}
-        >
-          {explanation ?? "Analysis unavailable."}
-        </Text>
-      )}
+      {/* Body */}
+      <Text style={styles.body}>{explanation}</Text>
 
-      {/* Mode label */}
-      {!isLoading && (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 10 }}>
-          <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_400Regular" }}>
-            {isBeginnerMode ? "🟢 Beginner-friendly" : "⚡ Technical summary"}
-          </Text>
+      {/* Triggers checklist */}
+      {triggers.length > 0 && (
+        <View style={styles.triggerList}>
+          {triggers.map((t, i) => (
+            <View key={i} style={styles.triggerRow}>
+              <View style={[styles.checkCircle, { backgroundColor: tint }]}>
+                <Text style={[styles.checkMark, { color }]}>✓</Text>
+              </View>
+              <Text style={styles.triggerText}>{t}</Text>
+            </View>
+          ))}
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.bg.card,
+    borderRadius:    16,
+    padding:         16,
+  },
+  header: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    marginBottom:   10,
+  },
+  sectionLabel: {
+    fontSize:      10,
+    color:         Colors.text.faint,
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+  },
+  confidencePill: {
+    paddingVertical:   3,
+    paddingHorizontal: 10,
+    borderRadius:      100,
+  },
+  confidenceText: {
+    fontSize:   12,
+    fontWeight: '500',
+  },
+  body: {
+    fontSize:    13,
+    color:       Colors.text.muted,
+    lineHeight:  20,
+  },
+  triggerList: {
+    marginTop: 10,
+    gap:       6,
+  },
+  triggerRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           8,
+  },
+  checkCircle: {
+    width:         16,
+    height:        16,
+    borderRadius:  8,
+    alignItems:    'center',
+    justifyContent: 'center',
+  },
+  checkMark: {
+    fontSize:   9,
+    fontWeight: '600',
+  },
+  triggerText: {
+    fontSize: 12,
+    color:    Colors.text.dim,
+    flex:     1,
+  },
+  shimmer: {
+    height:       12,
+    borderRadius: 6,
+    backgroundColor: Colors.bg.elevated,
+  },
+});
