@@ -30,8 +30,11 @@ export default function StockCard({
   market,
 }: StockCardProps) {
   const router   = useRouter();
-  const { watchlist, toggleWatchlist } = useAppStore();
-  const isSaved  = watchlist.includes(symbol);
+  const watchlist = useAppStore((state) => state.watchlist);
+  const toggleWatchlist = useAppStore(
+    (state) => (state as any).toggleWatchlist ?? (() => {})
+  );
+  const isSaved  = watchlist.some((item: any) => item.symbol === symbol);
   const currency = market === 'IN' ? '₹' : '$';
   const priceColor = signalColor(signal);
   const isPos    = change >= 0;

@@ -1,346 +1,418 @@
+import React from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAppStore } from "@/store/useAppStore";
-import { MOCK_STOCKS } from "@/constants/mockData";
-import { useStockQuote } from "@/hooks/useStockQuote";
-import { useAnalysis } from "@/hooks/useAnalysis";
-import { useAIExplanation } from "@/hooks/useAIExplanation";
-import { IndicatorInput } from "@/lib/analysis/explainIndicators";
-import SignalBadge from "@/components/ui/SignalBadge";
-import AIInsightCard from "@/components/ui/AIInsightCard";
-import IndicatorRow from "@/components/stock/IndicatorRow";
-import ChartContainer from "@/components/charts/ChartContainer";
+  View, Text, ScrollView, TouchableOpacity,
+  StyleSheet, ActivityIndicator, RefreshControl,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ChevronLeft, Star, RefreshCw, AlertCircle } from 'lucide-react-native';
+import { Colors, signalColor, signalTint } from '@/constants/colors';
+import SignalBadge from '@/components/ui/SignalBadge';
+import AIInsightCard from '@/components/ui/AIInsightCard';
+import IndicatorRow from '@/components/stock/IndicatorRow';
+import ChartContainer from '@/components/charts/ChartContainer';
+import { useAppStore } from '@/store/useAppStore';
+import { useStockQuote } from '@/hooks/useStockQuote';
+import { useAnalysis } from '@/hooks/useAnalysis';
+import { MOCK_STOCKS } from '@/constants/mockData';
 
 export default function StockDetailScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
-  const router = useRouter();
-  const { mode, watchlist, addToWatchlist, removeFromWatchlist } = useAppStore();
+  const router     = useRouter();
+  const { mode, watchlist, toggleWatchlist } = useAppStore();
+  const isAdvanced = mode === 'advanced';
 
-  // ── Live quote ─────────────────────────────
-  const { stock: liveStock, isLoading, error, lastUpdated, refresh } = useStockQuote(symbol);
+  const stockMeta = MOCK_STOCKS.find((s) => s.symbol === symbol);
+  const { quote, loading: quoteLoading, refresh: refreshQuote } = useStockQuote(symbol ?? '');
+  const { analysis, loading: analysisLoading, error: analysisError, refresh: refreshAnalysis } = useAnalysis(symbol ?? '');
 
-  // ── Real backend analysis ──────────────────
-  const {
-    analysis,
-    isLoading: analysisLoading,
-    error: analysisError,
-    refresh: refreshAnalysis,
-  } = useAnalysis(symbol);
+  const isSaved   = watchlist.includes(symbol ?? '');
+  const isLoading = quoteLoading || analysisLoading;
 
-  // ── Fallback to mock ───────────────────────
-  const mockStock = MOCK_STOCKS.find((s) => s.symbol === symbol);
+  const price     = quote?.price     ?? stockMeta?.price     ?? 0;
+  const change    = quote?.change    ?? stockMeta?.change    ?? 0;
+  const changePct = quote?.changePct ?? stockMeta?.changePct ?? 0;
+  const currency  = (stockMeta?.market === 'IN') ? '₹' : '$';
+  const isPos     = change >= 0;
 
-  const stock = liveStock
-    ? {
-        ...liveStock,
-        signal: analysis?.signal ?? mockStock?.signal ?? liveStock.signal,
-        confidence: analysis?.confidence ?? mockStock?.confidence ?? liveStock.confidence,
-        name: mockStock?.name ?? liveStock.name,
-      }
-    : mockStock
-    ? {
-        ...mockStock,
-        signal: analysis?.signal ?? mockStock.signal,
-        confidence: analysis?.confidence ?? mockStock.confidence,
-      }
-    : null;
+  const signal     = analysis?.signal     ?? 'Neutral';
+  const confidence = analysis?.confidence ?? 0;
+  const rsi        = analysis?.rsi        ?? null;
+  const macd       = analysis?.macd_signal === 'Bullish' ? 1 : analysis?.macd_signal === 'Bearish' ? -1 : 0;
+  const macdLabel  = analysis?.macd_signal ?? '—';
+  const maVsLabel  = analysis?.ma_vs_50    ?? '—';
+  const volLabel   = analysis?.volume_vs_avg ?? '—';
+  const trendLabel = analysis?.trend_strength ?? '—';
 
-  // ── AI Explanation ─────────────────────────
-  const indicatorInput: IndicatorInput | null = analysis
-    ? {
-        symbol: symbol ?? "",
-        signal: analysis.signal,
-        confidence: analysis.confidence,
-        rsi: analysis.indicators.rsi,
-        macd: analysis.indicators.macd_signal,
-        movingAvg: analysis.indicators.vs_moving_avg,
-        volume: analysis.indicators.volume_level,
-        trend: analysis.indicators.trend_strength,
-      }
-    : null;
+  // RSI bar percentage
+  const rsiBarpct = rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50;
 
-  const { explanation, isLoading: explanationLoading } = useAIExplanation(
-    indicatorInput,
-    mode
-  );
+  // Beginner vs advanced AI copy
+  const beginnerTriggers = [
+    'Price momentum is building',
+    `Currently ${maVsLabel.toLowerCase()} 50-day average`,
+    `Volume is ${volLabel.toLowerCase()}`,
+  ];
+  const advancedTriggers = [
+    `RSI ${rsi?.toFixed(1) ?? '—'} — ${(rsi ?? 50) > 70 ? 'approaching overbought' : (rsi ?? 50) < 30 ? 'oversold territory' : 'mid-range'}`,
+    `MACD: ${macdLabel}`,
+    `MA50: ${maVsLabel} · Trend: ${trendLabel}`,
+  ];
 
-  const isWatchlisted = watchlist.some((item) => item.symbol === symbol);
-  const isPositive = (stock?.change ?? 0) >= 0;
-  const changeColor = isPositive ? "text-bullish" : "text-bearish";
-  const changePrefix = isPositive ? "+" : "";
-  const currencySymbol = stock?.market === "IN" ? "₹" : "$";
+  const beginnerExplanation =
+    signal === 'Bullish'
+      ? 'Buyers have been pushing this stock up steadily. The numbers suggest positive momentum, though it\'s worth watching if it starts to slow down.'
+      : signal === 'Bearish'
+      ? 'Selling pressure has been building. The stock has been losing ground recently and the indicators suggest caution for now.'
+      : 'The stock isn\'t showing a strong direction yet — it\'s in a wait-and-see zone. No major buy or sell signals at the moment.';
 
-  // ── Indicators from real backend ───────────
-  const indicators = analysis
-    ? [
-        {
-          label: "RSI (14)",
-          value: analysis.indicators.rsi.toFixed(2),
-          status:
-            analysis.indicators.rsi > 70
-              ? "bearish"
-              : analysis.indicators.rsi < 30
-              ? "bullish"
-              : "neutral",
-        },
-        {
-          label: "MACD Signal",
-          value: analysis.indicators.macd_signal,
-          status:
-            analysis.indicators.macd_signal.toLowerCase() === "bullish"
-              ? "bullish"
-              : analysis.indicators.macd_signal.toLowerCase() === "bearish"
-              ? "bearish"
-              : "neutral",
-        },
-        {
-          label: "vs Moving Avg",
-          value: analysis.indicators.vs_moving_avg,
-          status:
-            analysis.indicators.vs_moving_avg.toLowerCase().includes("above")
-              ? "bullish"
-              : analysis.indicators.vs_moving_avg.toLowerCase().includes("below")
-              ? "bearish"
-              : "neutral",
-        },
-        {
-          label: "Volume Level",
-          value: analysis.indicators.volume_level,
-          status:
-            analysis.indicators.volume_level.toLowerCase() === "high"
-              ? "bullish"
-              : analysis.indicators.volume_level.toLowerCase() === "low"
-              ? "bearish"
-              : "neutral",
-        },
-        {
-          label: "Trend Strength",
-          value: analysis.indicators.trend_strength,
-          status:
-            analysis.indicators.trend_strength.toLowerCase() === "strong"
-              ? "bullish"
-              : analysis.indicators.trend_strength.toLowerCase() === "weak"
-              ? "bearish"
-              : "neutral",
-        },
-      ] as const
-    : [];
+  const advancedExplanation =
+    signal === 'Bullish'
+      ? `RSI at ${rsi?.toFixed(1) ?? '—'} indicates elevated momentum. MACD is ${macdLabel.toLowerCase()} and price is ${maVsLabel.toLowerCase()} the 50-day MA. ADX confirms ${trendLabel.toLowerCase()} trend strength.`
+      : signal === 'Bearish'
+      ? `RSI at ${rsi?.toFixed(1) ?? '—'} showing weakening momentum. MACD is ${macdLabel.toLowerCase()} with price ${maVsLabel.toLowerCase()} MA50. Watch for further distribution.`
+      : `Indicators are mixed. RSI at ${rsi?.toFixed(1) ?? '—'} — no directional conviction. Volume is ${volLabel.toLowerCase()} with ${trendLabel.toLowerCase()} trend strength.`;
 
-  // ── Not found ──────────────────────────────
-  if (!stock && !isLoading) {
+  const handleRefresh = () => {
+    refreshQuote();
+    refreshAnalysis();
+  };
+
+  if (!stockMeta && !quoteLoading) {
     return (
-      <View className="flex-1 bg-darkBg items-center justify-center px-6">
-        <Text className="text-white text-lg font-bold mb-2">Stock not found</Text>
-        {error && (
-          <Text className="text-bearish text-sm text-center mb-4">{error}</Text>
-        )}
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-primary text-sm">← Go back</Text>
+      <View style={styles.notFound}>
+        <Text style={styles.notFoundText}>Stock not found: {symbol}</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backBtnText}>Go back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-darkBg"
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingTop: 56,
-        paddingBottom: 40,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Back button */}
-      <TouchableOpacity onPress={() => router.back()} className="mb-6">
-        <Text className="text-primary text-sm">← Back</Text>
-      </TouchableOpacity>
+    <View style={styles.screen}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
+          <ChevronLeft size={20} color={Colors.text.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{stockMeta?.name ?? symbol}</Text>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => toggleWatchlist(symbol ?? '')}>
+          <Star
+            size={18}
+            color={isSaved ? Colors.bullish.primary : Colors.text.faint}
+            fill={isSaved ? Colors.bullish.primary : 'transparent'}
+          />
+        </TouchableOpacity>
+      </View>
 
-      {/* Stock header */}
-      <View className="flex-row items-start justify-between mb-6">
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2 mb-1">
-            <View className="w-10 h-10 rounded-xl bg-primary/20 items-center justify-center">
-              <Text className="text-primary font-bold text-sm">
-                {symbol?.slice(0, 2)}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            tintColor={Colors.bullish.primary}
+          />
+        }
+      >
+        {/* Price hero */}
+        <View style={styles.priceHero}>
+          <Text style={styles.symbolLabel}>
+            {symbol} · {stockMeta?.market === 'IN' ? 'NSE' : 'NASDAQ'}
+          </Text>
+          <Text style={styles.priceNumber}>
+            {currency}{price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </Text>
+          <View style={[styles.changePill, { backgroundColor: signalTint(signal) }]}>
+            {!quoteLoading && (
+              <View style={styles.liveDot} />
+            )}
+            {quoteLoading ? (
+              <ActivityIndicator size="small" color={signalColor(signal)} />
+            ) : (
+              <Text style={[styles.changePillText, { color: signalColor(signal) }]}>
+                {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePct.toFixed(2)}%) Today
               </Text>
-            </View>
-            <View>
-              <Text className="text-white text-lg font-bold">{symbol}</Text>
-              <Text className="text-neutral text-xs">{stock?.name ?? "—"}</Text>
-            </View>
+            )}
           </View>
+        </View>
 
-          {isLoading && !stock ? (
-            <View className="mt-3">
-              <View className="w-36 h-8 bg-darkCard rounded-lg" />
-              <View className="w-24 h-4 bg-darkCard rounded mt-2" />
+        {/* Refresh + signal row */}
+        <View style={styles.signalRow}>
+          <SignalBadge signal={signal} confidence={confidence} size="md" />
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={handleRefresh}
+            disabled={isLoading}
+          >
+            {isLoading
+              ? <ActivityIndicator size="small" color={Colors.text.faint} />
+              : <RefreshCw size={14} color={Colors.text.faint} />
+            }
+          </TouchableOpacity>
+        </View>
+
+        {/* Analysis error banner */}
+        {analysisError && (
+          <View style={styles.errorBanner}>
+            <AlertCircle size={14} color={Colors.bearish.primary} />
+            <Text style={styles.errorText}>
+              {analysisError} — showing cached data
+            </Text>
+          </View>
+        )}
+
+        {/* Chart */}
+        <View style={styles.section}>
+          <ChartContainer symbol={symbol ?? ''} />
+        </View>
+
+        {/* Technical indicators */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>Technical Signals</Text>
+          {analysisLoading ? (
+            <View style={styles.shimmerGroup}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <View key={n} style={styles.shimmer} />
+              ))}
             </View>
           ) : (
             <>
-              <Text className="text-white text-3xl font-bold mt-3">
-                {currencySymbol}
-                {stock?.price.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                })}
-              </Text>
-              <View className="flex-row items-center gap-2 mt-1">
-                <Text className={`${changeColor} text-sm`}>
-                  {changePrefix}
-                  {stock?.change.toFixed(2)} ({changePrefix}
-                  {stock?.changePercent.toFixed(2)}%) today
-                </Text>
-                {liveStock && (
-                  <View className="w-1.5 h-1.5 rounded-full bg-bullish" />
-                )}
-              </View>
+              <IndicatorRow
+                label="RSI (14)"
+                value={rsi ?? 0}
+                barPct={rsiBarpct}
+              />
+              <IndicatorRow
+                label="MACD"
+                value={macd}
+                barPct={macd > 0 ? 65 : macd < 0 ? 35 : 50}
+              />
+              <IndicatorRow
+                label="vs MA 50"
+                value={maVsLabel}
+                barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50}
+              />
+              <IndicatorRow
+                label="Volume"
+                value={volLabel}
+                barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25}
+              />
+              <IndicatorRow
+                label="Trend Strength"
+                value={trendLabel}
+                barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25}
+                isLast
+              />
             </>
           )}
         </View>
 
-        {/* Watchlist + Refresh */}
-        <View className="gap-2 items-end">
-          <TouchableOpacity
-            onPress={() =>
-              isWatchlisted
-                ? removeFromWatchlist(symbol!)
-                : addToWatchlist(symbol!)
-            }
-            className={`px-4 py-2 rounded-full border ${
-              isWatchlisted
-                ? "border-primary bg-primary/20"
-                : "border-darkCard bg-darkCard"
-            }`}
-          >
-            <Text
-              className={`text-xs font-semibold ${
-                isWatchlisted ? "text-primary" : "text-neutral"
-              }`}
-            >
-              {isWatchlisted ? "★ Saved" : "☆ Watch"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => { refresh(); refreshAnalysis(); }}
-            disabled={isLoading || analysisLoading}
-            className="px-3 py-1.5 rounded-full bg-darkCard"
-          >
-            {isLoading || analysisLoading ? (
-              <ActivityIndicator size="small" color="#4F46E5" />
-            ) : (
-              <Text className="text-neutral text-xs">↻ Refresh</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Quote error banner */}
-      {error && (
-        <View className="bg-bearish/10 border border-bearish/30 rounded-xl px-4 py-3 mb-4">
-          <Text className="text-bearish text-xs font-semibold mb-1">
-            Live data unavailable
-          </Text>
-          <Text className="text-neutral text-xs">{error}</Text>
-          <Text className="text-neutral/50 text-xs mt-1">
-            Showing last known data.
-          </Text>
-        </View>
-      )}
-
-      {/* Analysis error banner */}
-      {analysisError && (
-        <View className="bg-neutral/10 border border-neutral/30 rounded-xl px-4 py-3 mb-4">
-          <Text className="text-neutral text-xs font-semibold mb-1">
-            Analysis unavailable
-          </Text>
-          <Text className="text-neutral text-xs">{analysisError}</Text>
-          <TouchableOpacity onPress={refreshAnalysis} className="mt-1">
-            <Text className="text-primary text-xs">Tap to retry</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Last updated */}
-      {lastUpdated && (
-        <Text className="text-neutral/50 text-xs mb-4">
-          Updated {lastUpdated.toLocaleTimeString()}
-        </Text>
-      )}
-
-      {/* Chart */}
-      {symbol && (
-        <View className="bg-slate-900 rounded-2xl p-4 mb-6">
-          <ChartContainer symbol={symbol} />
-        </View>
-      )}
-
-      {/* Signal badge */}
-      {stock && (
-        <View className="mb-6">
-          <SignalBadge
-            signal={analysis?.signal ?? stock.signal}
-            confidence={analysis?.confidence ?? stock.confidence}
-            size="md"
+        {/* AI Insight */}
+        <View style={styles.section}>
+          <AIInsightCard
+            signal={signal}
+            confidence={confidence}
+            explanation={isAdvanced ? advancedExplanation : beginnerExplanation}
+            triggers={isAdvanced ? advancedTriggers : beginnerTriggers}
+            isBeginnerMode={!isAdvanced}
+            isLoading={analysisLoading}
           />
         </View>
-      )}
 
-      {/* AI Insight — smart template explanation */}
-      {stock && (
-        <AIInsightCard
-          symbol={stock.symbol}
-          signal={analysis?.signal ?? stock.signal}
-          confidence={analysis?.confidence ?? stock.confidence}
-          explanation={explanation}
-          isLoading={explanationLoading}
-          isBeginnerMode={mode === "beginner"}
-        />
-      )}
-
-      {/* Technical Indicators */}
-      {analysisLoading ? (
-        <View className="bg-darkCard rounded-2xl px-4 py-6 mb-4 items-center">
-          <ActivityIndicator color="#4F46E5" />
-          <Text className="text-neutral text-xs mt-2">
-            Loading indicators...
+        {/* Historical context */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>Historical Context</Text>
+          <Text style={styles.historicalText}>
+            In similar past setups with RSI near this level, outcomes varied widely — some stocks continued higher, others reversed. Past patterns are not a predictor of future results.
           </Text>
+          <View style={styles.disclaimerRow}>
+            <AlertCircle size={11} color={Colors.text.faint} />
+            <Text style={styles.disclaimerText}>
+              Historical context only — not a prediction
+            </Text>
+          </View>
         </View>
-      ) : indicators.length > 0 ? (
-        <View className="bg-darkCard rounded-2xl px-4 py-2 mb-4">
-          <Text className="text-white font-semibold text-sm pt-3 pb-2">
-            Technical Indicators
-          </Text>
-          {indicators.map((ind) => (
-            <IndicatorRow
-              key={ind.label}
-              label={ind.label}
-              value={ind.value}
-              status={ind.status}
-            />
-          ))}
-        </View>
-      ) : null}
 
-      {/* Historical context */}
-      <View className="bg-darkCard rounded-2xl p-4">
-        <Text className="text-white font-semibold text-sm mb-2">
-          📊 Historical Context
-        </Text>
-        <Text className="text-neutral text-xs leading-5">
-          Signal patterns are calculated from the last 100 days of price and
-          volume data using RSI, MACD, and ADX indicators.
-        </Text>
-        <Text className="text-neutral/50 text-xs mt-3">
-          Historical patterns do not guarantee future results.
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex:            1,
+    backgroundColor: Colors.bg.base,
+  },
+  header: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
+    paddingHorizontal: 20,
+    paddingTop:      56,
+    paddingBottom:   8,
+  },
+  iconBtn: {
+    width:           36,
+    height:          36,
+    borderRadius:    18,
+    backgroundColor: Colors.bg.card,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  headerTitle: {
+    fontSize:   14,
+    color:      Colors.text.muted,
+    letterSpacing: 0.05,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop:        8,
+  },
+
+  // Price hero
+  priceHero: {
+    alignItems:   'center',
+    paddingTop:   16,
+    paddingBottom: 12,
+  },
+  symbolLabel: {
+    fontSize:      12,
+    color:         Colors.text.faint,
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    marginBottom:  6,
+  },
+  priceNumber: {
+    fontSize:      52,
+    fontWeight:    '600',
+    color:         Colors.text.primary,
+    letterSpacing: -2,
+    lineHeight:    56,
+  },
+  changePill: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               6,
+    paddingVertical:   5,
+    paddingHorizontal: 14,
+    borderRadius:      100,
+    marginTop:         10,
+    minHeight:         30,
+  },
+  liveDot: {
+    width:        6,
+    height:       6,
+    borderRadius: 3,
+    backgroundColor: Colors.bullish.primary,
+  },
+  changePillText: {
+    fontSize:   13,
+    fontWeight: '500',
+  },
+
+  // Signal row
+  signalRow: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
+    marginBottom:    16,
+  },
+  refreshBtn: {
+    width:           32,
+    height:          32,
+    borderRadius:    16,
+    backgroundColor: Colors.bg.card,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+
+  // Error banner
+  errorBanner: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             6,
+    backgroundColor: Colors.bearish.tint,
+    borderRadius:    10,
+    padding:         10,
+    marginBottom:    12,
+  },
+  errorText: {
+    fontSize: 12,
+    color:    Colors.bearish.primary,
+    flex:     1,
+  },
+
+  // Sections
+  section: {
+    marginBottom: 14,
+  },
+  card: {
+    backgroundColor: Colors.bg.card,
+    borderRadius:    16,
+    padding:         16,
+    marginBottom:    14,
+  },
+  sectionLabel: {
+    fontSize:      10,
+    color:         Colors.text.faint,
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    marginBottom:  12,
+  },
+
+  // Historical
+  historicalText: {
+    fontSize:   13,
+    color:      Colors.text.muted,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  disclaimerRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           5,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    color:    Colors.text.faint,
+  },
+
+  // Shimmer
+  shimmerGroup: {
+    gap: 12,
+  },
+  shimmer: {
+    height:          12,
+    borderRadius:    6,
+    backgroundColor: Colors.bg.elevated,
+  },
+
+  // Not found
+  notFound: {
+    flex:            1,
+    backgroundColor: Colors.bg.base,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:             12,
+  },
+  notFoundText: {
+    fontSize: 14,
+    color:    Colors.text.muted,
+  },
+  backBtn: {
+    paddingHorizontal: 16,
+    paddingVertical:    8,
+    backgroundColor:   Colors.bg.card,
+    borderRadius:       10,
+  },
+  backBtnText: {
+    fontSize: 13,
+    color:    Colors.bullish.primary,
+  },
+});

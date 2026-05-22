@@ -5,10 +5,11 @@ import {
 import { Colors } from '@/constants/colors';
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
-import { useStockChart, TimeFrame } from '@/hooks/useStockChart';
+import { useStockChart } from '@/hooks/useStockChart';
 import { useAppStore } from '@/store/useAppStore';
 
-const TIMEFRAMES: TimeFrame[] = ['1W', '1M', '3M'];
+const TIMEFRAMES = ['1W', '1M', '3M'] as const;
+type TimeFrame = typeof TIMEFRAMES[number];
 
 interface ChartContainerProps {
   symbol: string;
@@ -19,7 +20,7 @@ export default function ChartContainer({ symbol }: ChartContainerProps) {
   const isAdvanced = mode === 'advanced';
 
   const [timeframe, setTimeframe] = React.useState<TimeFrame>('1W');
-  const { data, loading, error, refresh } = useStockChart(symbol, timeframe);
+  const { data, isLoading, error, refresh } = useStockChart(symbol, timeframe);
 
   return (
     <View style={styles.wrap}>
@@ -44,7 +45,7 @@ export default function ChartContainer({ symbol }: ChartContainerProps) {
 
       {/* Chart area */}
       <View style={styles.chartArea}>
-        {loading ? (
+        {isLoading ? (
           <View style={styles.loader}>
             <ActivityIndicator color={Colors.bullish.primary} size="small" />
           </View>
@@ -63,7 +64,7 @@ export default function ChartContainer({ symbol }: ChartContainerProps) {
       </View>
 
       {/* Advanced legend */}
-      {isAdvanced && !loading && !error && (
+      {isAdvanced && !isLoading && !error && (
         <View style={styles.legend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
