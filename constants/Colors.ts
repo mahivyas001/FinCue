@@ -1,8 +1,10 @@
+import { Signal } from '@/types/stock';
+
 export const Colors = {
   // ── Backgrounds ──────────────────────────────
   bg: {
-    base: '#111111',
-    card: '#1a1a1a',
+    base:     '#111111',
+    card:     '#1a1a1a',
     elevated: '#222222',
   },
 
@@ -34,34 +36,45 @@ export const Colors = {
   },
 
   // ── UI ───────────────────────────────────────
-  border:   '#1e1e1e',
-  divider:  '#1e1e1e',
-  icon:     '#444444',
+  border:     '#1e1e1e',
+  divider:    '#1e1e1e',
+  icon:       '#444444',
   iconActive: '#FFB3C6',
 };
 
-// Signal helpers — use these everywhere instead of inline conditionals
-export type SignalType = 'Bullish' | 'Bearish' | 'Neutral';
+// ── Signal type ───────────────────────────────
+// Single source of truth is lowercase Signal from @/types/stock.
+// SignalType is kept as an alias for any legacy usage — both are identical.
+export type { Signal };
+export type SignalType = Signal; // alias — 'bullish' | 'bearish' | 'neutral'
 
-export const signalColor = (signal: SignalType) => ({
-  Bullish: Colors.bullish.primary,
-  Bearish: Colors.bearish.primary,
-  Neutral: Colors.neutral.primary,
-}[signal]);
+// ── Signal helpers ────────────────────────────
+export const signalColor = (signal: Signal): string => ({
+  bullish: Colors.bullish.primary,
+  bearish: Colors.bearish.primary,
+  neutral: Colors.neutral.primary,
+}[signal] ?? Colors.neutral.primary);
 
-export const signalTint = (signal: SignalType) => ({
-  Bullish: Colors.bullish.tint,
-  Bearish: Colors.bearish.tint,
-  Neutral: Colors.neutral.tint,
-}[signal]);
+export const signalTint = (signal: Signal): string => ({
+  bullish: Colors.bullish.tint,
+  bearish: Colors.bearish.tint,
+  neutral: Colors.neutral.tint,
+}[signal] ?? Colors.neutral.tint);
 
-export const signalDim = (signal: SignalType) => ({
-  Bullish: Colors.bullish.dim,
-  Bearish: Colors.bearish.dim,
-  Neutral: Colors.neutral.dim,
-}[signal]);
+export const signalDim = (signal: Signal): string => ({
+  bullish: Colors.bullish.dim,
+  bearish: Colors.bearish.dim,
+  neutral: Colors.neutral.dim,
+}[signal] ?? Colors.neutral.dim);
 
-// Indicator value color — positive → bullish pink, negative → bearish blue, zero/text → dim
+// Display label — capitalizes for UI only
+export const signalLabel = (signal: Signal): string => ({
+  bullish: 'Bullish',
+  bearish: 'Bearish',
+  neutral: 'Neutral',
+}[signal] ?? 'Neutral');
+
+// Indicator value color
 export const valueColor = (value: number | string | null): string => {
   if (value === null || value === undefined) return Colors.text.faint;
   if (typeof value === 'string') return Colors.neutral.primary;

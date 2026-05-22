@@ -1,191 +1,305 @@
-import { View, Text, TouchableOpacity, Switch, ScrollView } from "react-native";
-import { useAppStore } from "@/store/useAppStore";
-import { useTheme } from "@/hooks/useTheme";
+import React from 'react';
+import {
+  View, Text, ScrollView, Switch,
+  TouchableOpacity, StyleSheet,
+} from 'react-native';
+import { Colors } from '@/constants/colors';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsScreen() {
-  const { mode, setMode, toggleTheme } = useAppStore();
-  const { colors, isDark } = useTheme();
-  const isAdvanced = mode === "advanced";
+  const { mode, setMode } = useAppStore();
+  const isAdvanced = mode === 'advanced';
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 56, paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.screen}>
       {/* Header */}
-      <Text style={{ color: colors.text, fontSize: 26, fontFamily: "SpaceGrotesk_700Bold", marginBottom: 4 }}>
-        Settings
-      </Text>
-      <Text style={{ color: colors.subtext, fontSize: 12, fontFamily: "Poppins_400Regular", marginBottom: 32 }}>
-        Customize your FinCue experience.
-      </Text>
-
-      {/* Appearance section */}
-      <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_600SemiBold", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
-        Appearance
-      </Text>
-
-      {/* Theme toggle */}
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 8,
-          borderWidth: 1,
-          borderColor: colors.border,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <View>
-          <Text style={{ color: colors.text, fontSize: 14, fontFamily: "Poppins_600SemiBold" }}>
-            {isDark ? "Dark Mode" : "Light Mode"}
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular", marginTop: 2 }}>
-            {isDark ? "Easy on the eyes at night" : "Clean and bright interface"}
-          </Text>
-        </View>
-        <Switch
-          value={isDark}
-          onValueChange={toggleTheme}
-          trackColor={{ false: "#E2E8F0", true: "#4F46E5" }}
-          thumbColor="#FFFFFF"
-        />
+      <View style={styles.header}>
+        <Text style={styles.title}>Settings</Text>
       </View>
 
-      {/* Mode section */}
-      <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_600SemiBold", letterSpacing: 1, marginBottom: 8, marginTop: 24, textTransform: "uppercase" }}>
-        Analysis Mode
-      </Text>
-
-      {/* Mode toggle */}
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 8,
-          borderWidth: 1,
-          borderColor: colors.border,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
       >
-        <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={{ color: colors.text, fontSize: 14, fontFamily: "Poppins_600SemiBold" }}>
-            {isAdvanced ? "Advanced Mode" : "Beginner Mode"}
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular", marginTop: 2 }}>
-            {isAdvanced
-              ? "Technical indicators and detailed analysis"
-              : "Plain English explanations and guided insights"}
-          </Text>
-        </View>
-        <Switch
-          value={isAdvanced}
-          onValueChange={(val) => setMode(val ? "advanced" : "beginner")}
-          trackColor={{ false: "#E2E8F0", true: "#4F46E5" }}
-          thumbColor="#FFFFFF"
-        />
-      </View>
 
-      {/* Mode cards */}
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-        <TouchableOpacity
-          onPress={() => setMode("beginner")}
-          style={{
-            flex: 1,
-            backgroundColor: colors.card,
-            borderRadius: 16,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: !isAdvanced ? "#4F46E5" : colors.border,
-          }}
-        >
-          <Text style={{ fontSize: 20, marginBottom: 6 }}>🟢</Text>
-          <Text style={{ color: colors.text, fontSize: 13, fontFamily: "Poppins_600SemiBold", marginBottom: 4 }}>
-            Beginner
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular" }}>
-            Simple explanations. Great for learning.
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => setMode("advanced")}
-          style={{
-            flex: 1,
-            backgroundColor: colors.card,
-            borderRadius: 16,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: isAdvanced ? "#4F46E5" : colors.border,
-          }}
-        >
-          <Text style={{ fontSize: 20, marginBottom: 6 }}>⚡</Text>
-          <Text style={{ color: colors.text, fontSize: 13, fontFamily: "Poppins_600SemiBold", marginBottom: 4 }}>
-            Advanced
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular" }}>
-            Full indicators. For active traders.
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Data section */}
-      <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_600SemiBold", letterSpacing: 1, marginBottom: 8, marginTop: 24, textTransform: "uppercase" }}>
-        Data Sources
-      </Text>
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
-          gap: 12,
-        }}
-      >
-        {[
-          { label: "Price Data", value: "Alpha Vantage" },
-          { label: "Analysis Engine", value: "FinCue Backend" },
-          { label: "Signals", value: "RSI · MACD · ADX" },
-        ].map((item) => (
-          <View key={item.label} style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ color: colors.subtext, fontSize: 12, fontFamily: "Poppins_400Regular" }}>
-              {item.label}
-            </Text>
-            <Text style={{ color: colors.text, fontSize: 12, fontFamily: "Poppins_500Medium" }}>
-              {item.value}
-            </Text>
+        {/* Mode toggle */}
+        <Text style={styles.sectionLabel}>Experience Mode</Text>
+        <View style={styles.card}>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <Text style={styles.toggleTitle}>
+                {isAdvanced ? 'Advanced Mode' : 'Beginner Mode'}
+              </Text>
+              <Text style={styles.toggleSub}>
+                {isAdvanced
+                  ? 'Technical indicators, raw values, candlestick charts'
+                  : 'Plain English explanations, simple line charts'}
+              </Text>
+            </View>
+            <Switch
+              value={isAdvanced}
+              onValueChange={(val) => setMode(val ? 'advanced' : 'beginner')}
+              trackColor={{
+                false: Colors.bg.elevated,
+                true:  Colors.bullish.tint,
+              }}
+              thumbColor={isAdvanced ? Colors.bullish.primary : Colors.text.faint}
+              ios_backgroundColor={Colors.bg.elevated}
+            />
           </View>
-        ))}
-      </View>
+        </View>
 
-      {/* About */}
-      <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Poppins_600SemiBold", letterSpacing: 1, marginBottom: 8, marginTop: 24, textTransform: "uppercase" }}>
-        About
-      </Text>
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
-        }}
-      >
-        <Text style={{ color: colors.text, fontSize: 14, fontFamily: "Poppins_600SemiBold", marginBottom: 4 }}>
-          FinCue v1.0.0
-        </Text>
-        <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular", lineHeight: 16 }}>
-          AI-powered market analysis assistant. Not a brokerage. Not financial advice. Always do your own research.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Mode cards */}
+        <View style={styles.modeGrid}>
+          <TouchableOpacity
+            style={[
+              styles.modeCard,
+              !isAdvanced && styles.modeCardActive,
+              !isAdvanced && { borderColor: Colors.bullish.primary + '55' },
+            ]}
+            onPress={() => setMode('beginner')}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.modeEmoji}>🌱</Text>
+            <Text style={[
+              styles.modeName,
+              !isAdvanced && { color: Colors.bullish.primary },
+            ]}>
+              Beginner
+            </Text>
+            <Text style={styles.modeDesc}>
+              Plain English, simple charts, guided insights
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.modeCard,
+              isAdvanced && styles.modeCardActive,
+              isAdvanced && { borderColor: Colors.bearish.primary + '55' },
+            ]}
+            onPress={() => setMode('advanced')}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.modeEmoji}>📊</Text>
+            <Text style={[
+              styles.modeName,
+              isAdvanced && { color: Colors.bearish.primary },
+            ]}>
+              Advanced
+            </Text>
+            <Text style={styles.modeDesc}>
+              RSI, MACD, candlesticks, raw indicator values
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* About section */}
+        <Text style={styles.sectionLabel}>About</Text>
+        <View style={styles.card}>
+          <View style={styles.aboutRow}>
+            <Text style={styles.aboutLabel}>App</Text>
+            <Text style={styles.aboutValue}>FinCue</Text>
+          </View>
+          <View style={[styles.aboutRow, styles.aboutRowBorder]}>
+            <Text style={styles.aboutLabel}>Version</Text>
+            <Text style={styles.aboutValue}>1.0.0 (Beta)</Text>
+          </View>
+          <View style={[styles.aboutRow, styles.aboutRowBorder]}>
+            <Text style={styles.aboutLabel}>Markets</Text>
+            <Text style={styles.aboutValue}>US · India</Text>
+          </View>
+          <View style={[styles.aboutRow, styles.aboutRowBorder]}>
+            <Text style={styles.aboutLabel}>Data</Text>
+            <Text style={styles.aboutValue}>Alpha Vantage</Text>
+          </View>
+        </View>
+
+        {/* Disclaimer */}
+        <Text style={styles.sectionLabel}>Disclaimer</Text>
+        <View style={styles.card}>
+          <Text style={styles.disclaimerText}>
+            FinCue is an educational market analysis tool. It does not execute trades,
+            manage portfolios, or guarantee any financial outcome. All signals and insights
+            are for informational purposes only.{'\n\n'}
+            Past market patterns are not a predictor of future results. Always do your
+            own research before making any investment decision.
+          </Text>
+        </View>
+
+        {/* Signal legend */}
+        <Text style={styles.sectionLabel}>Signal Colors</Text>
+        <View style={styles.card}>
+          <View style={styles.legendRow}>
+            <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
+            <View>
+              <Text style={[styles.legendName, { color: Colors.bullish.primary }]}>Bullish</Text>
+              <Text style={styles.legendDesc}>Positive momentum indicators</Text>
+            </View>
+          </View>
+          <View style={[styles.legendRow, styles.legendRowBorder]}>
+            <View style={[styles.legendDot, { backgroundColor: Colors.bearish.primary }]} />
+            <View>
+              <Text style={[styles.legendName, { color: Colors.bearish.primary }]}>Bearish</Text>
+              <Text style={styles.legendDesc}>Negative momentum indicators</Text>
+            </View>
+          </View>
+          <View style={[styles.legendRow, styles.legendRowBorder]}>
+            <View style={[styles.legendDot, { backgroundColor: Colors.neutral.primary }]} />
+            <View>
+              <Text style={[styles.legendName, { color: Colors.neutral.primary }]}>Neutral</Text>
+              <Text style={styles.legendDesc}>No strong directional signal</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex:            1,
+    backgroundColor: Colors.bg.base,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop:        60,
+    paddingBottom:     16,
+  },
+  title: {
+    fontSize:      24,
+    fontWeight:    '700',
+    color:         Colors.text.primary,
+    letterSpacing: -0.5,
+  },
+  content: {
+    paddingHorizontal: 20,
+  },
+  sectionLabel: {
+    fontSize:      10,
+    color:         Colors.text.faint,
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    marginBottom:  8,
+    marginTop:     20,
+  },
+
+  // Cards
+  card: {
+    backgroundColor: Colors.bg.card,
+    borderRadius:    16,
+    padding:         16,
+  },
+
+  // Toggle row
+  toggleRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    gap:            12,
+  },
+  toggleLeft: {
+    flex: 1,
+    gap:  4,
+  },
+  toggleTitle: {
+    fontSize:   14,
+    fontWeight: '600',
+    color:      Colors.text.primary,
+  },
+  toggleSub: {
+    fontSize:   12,
+    color:      Colors.text.faint,
+    lineHeight: 18,
+  },
+
+  // Mode cards
+  modeGrid: {
+    flexDirection: 'row',
+    gap:           10,
+    marginTop:     10,
+  },
+  modeCard: {
+    flex:            1,
+    backgroundColor: Colors.bg.card,
+    borderRadius:    14,
+    padding:         14,
+    gap:             5,
+    borderWidth:     1,
+    borderColor:     'transparent',
+  },
+  modeCardActive: {
+    borderWidth: 1,
+  },
+  modeEmoji: {
+    fontSize:    20,
+    marginBottom: 2,
+  },
+  modeName: {
+    fontSize:   14,
+    fontWeight: '600',
+    color:      Colors.text.secondary,
+  },
+  modeDesc: {
+    fontSize:   11,
+    color:      Colors.text.faint,
+    lineHeight: 16,
+  },
+
+  // About rows
+  aboutRow: {
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+    paddingVertical: 8,
+  },
+  aboutRowBorder: {
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
+  aboutLabel: {
+    fontSize: 13,
+    color:    Colors.text.muted,
+  },
+  aboutValue: {
+    fontSize:   13,
+    fontWeight: '500',
+    color:      Colors.text.secondary,
+  },
+
+  // Disclaimer
+  disclaimerText: {
+    fontSize:   12,
+    color:      Colors.text.faint,
+    lineHeight: 19,
+  },
+
+  // Signal legend
+  legendRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           12,
+    paddingVertical: 9,
+  },
+  legendRowBorder: {
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
+  legendDot: {
+    width:        10,
+    height:       10,
+    borderRadius: 5,
+  },
+  legendName: {
+    fontSize:   13,
+    fontWeight: '600',
+    marginBottom: 1,
+  },
+  legendDesc: {
+    fontSize: 11,
+    color:    Colors.text.faint,
+  },
+});

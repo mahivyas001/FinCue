@@ -1,22 +1,21 @@
 import React from 'react';
-import {
-  View, Text, TouchableOpacity, StyleSheet
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Star } from 'lucide-react-native';
-import { Colors, SignalType, signalColor } from '@/constants/colors';
+import { Colors, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import SignalBadge from '@/components/ui/SignalBadge';
 import { useAppStore } from '@/store/useAppStore';
 
 interface StockCardProps {
-  symbol:     string;
-  name:       string;
-  price:      number;
-  change:     number;
-  changePct:  number;
-  signal:     SignalType;
-  confidence?: number;
-  market:     'US' | 'IN';
+  symbol:        string;
+  name:          string;
+  price:         number;
+  change:        number;
+  changePercent: number;
+  signal:        Signal;
+  confidence?:   number;
+  market:        'US' | 'IN';
 }
 
 export default function StockCard({
@@ -24,19 +23,18 @@ export default function StockCard({
   name,
   price,
   change,
-  changePct,
+  changePercent,
   signal,
   confidence,
   market,
 }: StockCardProps) {
-  const router   = useRouter();
-  const watchlist = useAppStore((state) => state.watchlist);
+  const router          = useRouter();
+  const watchlist       = useAppStore((state) => state.watchlist);
   const toggleWatchlist = useAppStore(
     (state) => (state as any).toggleWatchlist ?? (() => {})
   );
   const isSaved  = watchlist.some((item: any) => item.symbol === symbol);
   const currency = market === 'IN' ? '₹' : '$';
-  const priceColor = signalColor(signal);
   const isPos    = change >= 0;
 
   return (
@@ -81,11 +79,8 @@ export default function StockCard({
           })}
         </Text>
 
-        <Text style={[
-          styles.change,
-          { color: signalColor(signal) },
-        ]}>
-          {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePct.toFixed(2)}%)
+        <Text style={[styles.change, { color: signalColor(signal) }]}>
+          {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePercent.toFixed(2)}%)
         </Text>
 
         <SignalBadge signal={signal} confidence={confidence} size="sm" />
@@ -129,8 +124,8 @@ const styles = StyleSheet.create({
     color:      Colors.text.primary,
   },
   name: {
-    fontSize: 11,
-    color:    Colors.text.dim,
+    fontSize:  11,
+    color:     Colors.text.dim,
     marginTop: 1,
     maxWidth:  140,
   },
@@ -139,7 +134,7 @@ const styles = StyleSheet.create({
     marginTop:     4,
   },
   marketTag: {
-    backgroundColor: Colors.bg.elevated,
+    backgroundColor:   Colors.bg.elevated,
     paddingHorizontal: 6,
     paddingVertical:   2,
     borderRadius:      4,

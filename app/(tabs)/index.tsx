@@ -4,6 +4,7 @@ import {
   ActivityIndicator, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import StockCard from '@/components/stock/StockCard';
 import MarketFilterBar from '@/components/ui/MarketFilterBar';
 import AIInsightCard from '@/components/ui/AIInsightCard';
@@ -21,13 +22,12 @@ export default function HomeScreen() {
   const symbols = MOCK_STOCKS.map((s) => s.symbol);
   const { quotes, loading, error, refresh } = useMultipleQuotes(symbols);
 
-  const normalizeSignal = (signal: string) => {
-    switch (signal.toLowerCase()) {
-      case 'bullish': return 'Bullish' as const;
-      case 'bearish': return 'Bearish' as const;
-      case 'neutral': return 'Neutral' as const;
-      default: return 'Neutral' as const;
-    }
+  // Keep signals lowercase — matches Signal type
+  const normalizeSignal = (signal: string): Signal => {
+    const lower = signal.toLowerCase();
+    if (lower === 'bullish') return 'bullish';
+    if (lower === 'bearish') return 'bearish';
+    return 'neutral';
   };
 
   const filtered = MOCK_STOCKS.filter((s) => {
@@ -37,20 +37,20 @@ export default function HomeScreen() {
   });
 
   const merged = filtered.map((s) => {
-    const live = quotes[s.symbol];
+    const live          = quotes[s.symbol];
     const currentChange = live?.change ?? s.change;
-    const currentPrice = live?.price ?? s.price;
-    const changePct = currentPrice ? (currentChange / currentPrice) * 100 : 0;
+    const currentPrice  = live?.price  ?? s.price;
+    const changePercent = currentPrice ? (currentChange / currentPrice) * 100 : 0;
     return {
       ...s,
-      signal:    normalizeSignal(s.signal),
-      price:     currentPrice,
-      change:    currentChange,
-      changePct,
+      signal:        normalizeSignal(s.signal),
+      price:         currentPrice,
+      change:        currentChange,
+      changePercent,               // ← was changePct
     };
   });
 
-  const featuredStock = merged.find((s) => s.signal === 'Bullish') ?? merged[0];
+  const featuredStock = merged.find((s) => s.signal === 'bullish') ?? merged[0];
 
   return (
     <View style={styles.screen}>
@@ -100,8 +100,14 @@ export default function HomeScreen() {
               confidence={featuredStock.confidence ?? 60}
               explanation={
                 isAdvanced
-                  ? `${featuredStock.symbol} is showing a ${featuredStock.signal.toLowerCase()} setup. Technical indicators align with the current price action.`
-                  : `${featuredStock.name} looks interesting right now. The market data suggests ${featuredStock.signal === 'Bullish' ? 'positive momentum' : featuredStock.signal === 'Bearish' ? 'some selling pressure' : 'no strong direction yet'}.`
+                  ? `${featuredStock.symbol} is showing a ${featuredStock.signal} setup. Technical indicators align with the current price action.`
+                  : `${featuredStock.name} looks interesting right now. The market data suggests ${
+                      featuredStock.signal === 'bullish'
+                        ? 'positive momentum'
+                        : featuredStock.signal === 'bearish'
+                        ? 'some selling pressure'
+                        : 'no strong direction yet'
+                    }.`
               }
               triggers={[
                 `Signal: ${featuredStock.signal}`,
@@ -121,13 +127,13 @@ export default function HomeScreen() {
             </View>
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: Colors.bullish.primary }]}>
-                {merged.filter((s) => s.signal === 'Bullish').length}
+                {merged.filter((s) => s.signal === 'bullish').length}
               </Text>
               <Text style={styles.statLabel}>Bullish</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: Colors.bearish.primary }]}>
-                {merged.filter((s) => s.signal === 'Bearish').length}
+                {merged.filter((s) => s.signal === 'bearish').length}
               </Text>
               <Text style={styles.statLabel}>Bearish</Text>
             </View>
@@ -158,7 +164,7 @@ export default function HomeScreen() {
                 name={s.name}
                 price={s.price}
                 change={s.change}
-                changePct={s.changePct}
+                changePercent={s.changePercent}   // ← was changePct
                 signal={s.signal}
                 confidence={s.confidence}
                 market={s.market}
@@ -174,101 +180,22 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex:            1,
-    backgroundColor: Colors.bg.base,
-  },
-  header: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'space-between',
-    paddingHorizontal: 20,
-    paddingTop:      60,
-    paddingBottom:   12,
-  },
-  greeting: {
-    fontSize: 12,
-    color:    Colors.text.faint,
-    marginBottom: 2,
-  },
-  appName: {
-    fontSize:   24,
-    fontWeight: '700',
-    color:      Colors.text.primary,
-    letterSpacing: -0.5,
-  },
-  modeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical:    5,
-    borderRadius:      100,
-  },
-  modeText: {
-    fontSize:   12,
-    fontWeight: '500',
-  },
-  content: {
-    paddingTop: 4,
-  },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom:      14,
-  },
-  sectionLabel: {
-    fontSize:      10,
-    color:         Colors.text.faint,
-    letterSpacing: 0.1,
-    textTransform: 'uppercase',
-    marginBottom:  8,
-  },
-  statsRow: {
-    flexDirection:     'row',
-    paddingHorizontal: 20,
-    gap:               10,
-    marginBottom:      14,
-  },
-  statCard: {
-    flex:            1,
-    backgroundColor: Colors.bg.card,
-    borderRadius:    12,
-    padding:         12,
-    alignItems:      'center',
-  },
-  statValue: {
-    fontSize:   20,
-    fontWeight: '600',
-    color:      Colors.text.primary,
-  },
-  statLabel: {
-    fontSize:  11,
-    color:     Colors.text.faint,
-    marginTop: 2,
-  },
-  tipCard: {
-    marginHorizontal: 20,
-    marginBottom:     14,
-    backgroundColor:  Colors.bullish.tint,
-    borderRadius:     12,
-    padding:          12,
-  },
-  tipText: {
-    fontSize:   12,
-    color:      Colors.bullish.primary,
-    lineHeight: 18,
-  },
-  stockList: {
-    paddingHorizontal: 20,
-    paddingTop:        12,
-  },
-  errorBanner: {
-    marginHorizontal: 20,
-    marginBottom:     12,
-    backgroundColor:  Colors.bearish.tint,
-    borderRadius:     10,
-    padding:          10,
-  },
-  errorText: {
-    fontSize: 12,
-    color:    Colors.bearish.primary,
-    textAlign: 'center',
-  },
+  screen:       { flex: 1, backgroundColor: Colors.bg.base },
+  header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 12 },
+  greeting:     { fontSize: 12, color: Colors.text.faint, marginBottom: 2 },
+  appName:      { fontSize: 24, fontWeight: '700', color: Colors.text.primary, letterSpacing: -0.5 },
+  modeBadge:    { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100 },
+  modeText:     { fontSize: 12, fontWeight: '500' },
+  content:      { paddingTop: 4 },
+  section:      { paddingHorizontal: 20, marginBottom: 14 },
+  sectionLabel: { fontSize: 10, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 8 },
+  statsRow:     { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 14 },
+  statCard:     { flex: 1, backgroundColor: Colors.bg.card, borderRadius: 12, padding: 12, alignItems: 'center' },
+  statValue:    { fontSize: 20, fontWeight: '600', color: Colors.text.primary },
+  statLabel:    { fontSize: 11, color: Colors.text.faint, marginTop: 2 },
+  tipCard:      { marginHorizontal: 20, marginBottom: 14, backgroundColor: Colors.bullish.tint, borderRadius: 12, padding: 12 },
+  tipText:      { fontSize: 12, color: Colors.bullish.primary, lineHeight: 18 },
+  stockList:    { paddingHorizontal: 20, paddingTop: 12 },
+  errorBanner:  { marginHorizontal: 20, marginBottom: 12, backgroundColor: Colors.bearish.tint, borderRadius: 10, padding: 10 },
+  errorText:    { fontSize: 12, color: Colors.bearish.primary, textAlign: 'center' },
 });

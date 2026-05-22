@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Search, X } from 'lucide-react-native';
+import { X, Search } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 
 interface SearchBarProps {
-  value:       string;
+  value: string;
   onChangeText: (text: string) => void;
-  placeholder?: string;
+  onClear: () => void;
+  placeholder?: string; // ← fixed: was missing, caused the red underline on line 39
 }
 
 export default function SearchBar({
   value,
   onChangeText,
-  placeholder = 'Search stocks…',
+  onClear,
+  placeholder = 'Search stocks...', // ← default fallback
 }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
 
@@ -23,21 +25,26 @@ export default function SearchBar({
         focused && styles.containerFocused,
       ]}
     >
-      <Search size={16} color={focused ? Colors.bullish.primary : Colors.text.faint} />
+      <Search
+        size={16}
+        color={focused ? Colors.bullish.primary : Colors.text.faint}
+        style={styles.icon}
+      />
       <TextInput
-        style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={placeholder} // ← now passed through correctly
         placeholderTextColor={Colors.text.faint}
-        autoCapitalize="characters"
-        autoCorrect={false}
+        style={styles.input}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        returnKeyType="search"
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <X size={14} color={Colors.text.dim} />
+        <TouchableOpacity onPress={onClear} style={styles.clearBtn}>
+          <X size={14} color={Colors.text.faint} />
         </TouchableOpacity>
       )}
     </View>
@@ -46,23 +53,29 @@ export default function SearchBar({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection:   'row',
-    alignItems:      'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.bg.card,
-    borderRadius:    12,
-    paddingHorizontal: 14,
-    paddingVertical:   11,
-    gap:             10,
-    borderWidth:     1,
-    borderColor:     'transparent',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   containerFocused: {
-    borderColor: Colors.bullish.primary + '55',
+    borderColor: Colors.bullish.primary,
+  },
+  icon: {
+    marginRight: 8,
   },
   input: {
-    flex:      1,
-    fontSize:  14,
-    color:     Colors.text.primary,
-    padding:   0,
+    flex: 1,
+    fontSize: 14,
+    color: Colors.text.primary,
+    padding: 0,
+  },
+  clearBtn: {
+    marginLeft: 8,
+    padding: 2,
   },
 });
