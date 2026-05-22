@@ -48,7 +48,12 @@ export async function fetchAnalysis(symbol: string): Promise<AnalysisResult> {
   }
 
   const url = `${API_CONFIG.BACKEND_URL}/api/v1/analysis/${key}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  },
+});
 
   if (res.status === 429) throw new Error("RATE_LIMIT");
   if (res.status === 404) throw new Error(`No data found for ${key}`);
