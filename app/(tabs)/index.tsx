@@ -1,164 +1,261 @@
+import React, { useState } from 'react';
 import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from "react-native";
-import { useState } from "react";
-import { useAppStore } from "@/store/useAppStore";
-import { MOCK_STOCKS } from "@/constants/mockData";
-import StockCard from "@/components/stock/StockCard";
-import MarketFilterBar from "@/components/ui/MarketFilterBar";
-import AIInsightCard from "@/components/ui/AIInsightCard";
-import { useMultipleQuotes } from "@/hooks/useStockQuote";
-import { useTheme } from "@/hooks/useTheme";
+  View, Text, ScrollView, RefreshControl,
+  ActivityIndicator, StyleSheet, TouchableOpacity,
+} from 'react-native';
+import { Colors } from '@/constants/colors';
+import StockCard from '@/components/stock/StockCard';
+import MarketFilterBar from '@/components/ui/MarketFilterBar';
+import AIInsightCard from '@/components/ui/AIInsightCard';
+import { useAppStore } from '@/store/useAppStore';
+import { useMultipleQuotes } from '@/hooks/useStockQuote';
+import { MOCK_STOCKS } from '@/constants/mockData';
 
-const SYMBOLS = MOCK_STOCKS.map((s) => s.symbol);
+type MarketFilter = 'All' | 'US' | 'India';
 
 export default function HomeScreen() {
-  const { mode, marketFilter } = useAppStore();
-  const { colors, isDark } = useTheme();
-  const { quotes, loading, error, refresh } = useMultipleQuotes(SYMBOLS);
-  const [refreshing, setRefreshing] = useState(false);
+  const { mode } = useAppStore();
+  const isAdvanced = mode === 'advanced';
+  const [filter, setFilter] = useState<MarketFilter>('All');
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
-  };
+  const symbols = MOCK_STOCKS.map((s) => s.symbol);
+  const { quotes, loading, error, refresh } = useMultipleQuotes(symbols);
 
-  const enrichedStocks = MOCK_STOCKS.map((stock) => {
-    const live = quotes[stock.symbol];
-    if (!live) return stock;
-    return { ...stock, price: live.price, change: live.change, changePercent: live.changePercent };
+  const filtered = MOCK_STOCKS.filter((s) => {
+    if (filter === 'US')    return s.market === 'US';
+    if (filter === 'India') return s.market === 'IN';
+    return true;
   });
 
-  const filteredStocks = enrichedStocks.filter((stock) =>
-    marketFilter === "ALL" ? true : stock.market === marketFilter
-  );
+  const merged = filtered.map((s) => {
+    const live = quotes[s.symbol];
+    return {
+      ...s,
+      price:     live?.price     ?? s.price,
+      change:    live?.change    ?? s.change,
+      changePct: live?.changePct ?? s.changePct,
+    };
+  });
 
-  const featuredStock = enrichedStocks.find((s) => s.signal === "bullish") ?? enrichedStocks[0];
+  const featuredStock = merged.find((s) => s.signal === 'Bullish') ?? merged[0];
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 56, paddingBottom: 32 }}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <><RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4F46E5" /><Text style={{ fontFamily: "SpaceGrotesk_700Bold", fontSize: 30, color: "red" }}>
-          Font Test
-        </Text></>
-      }
-    >
+    <View style={styles.screen}>
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+      <View style={styles.header}>
         <View>
-          <Text style={{ color: colors.text, fontSize: 26, fontFamily: "SpaceGrotesk_700Bold" }}>
-            FinCue ✦
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 12, fontFamily: "Poppins_400Regular", marginTop: 2 }}>
-            Market intelligence, simplified.
-          </Text>
+          <Text style={styles.greeting}>Good morning</Text>
+          <Text style={styles.appName}>FinCue</Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {loading && <ActivityIndicator size="small" color="#4F46E5" />}
-          <View
-            style={{
-              backgroundColor: "#4F46E515",
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: "#4F46E530",
-            }}
-          >
-            <Text style={{ color: "#4F46E5", fontSize: 11, fontFamily: "Poppins_600SemiBold" }}>
-              {mode === "beginner" ? "🟢 Beginner" : "⚡ Advanced"}
-            </Text>
-          </View>
+        <View style={[
+          styles.modeBadge,
+          { backgroundColor: isAdvanced ? Colors.bearish.tint : Colors.bullish.tint },
+        ]}>
+          <Text style={[
+            styles.modeText,
+            { color: isAdvanced ? Colors.bearish.primary : Colors.bullish.primary },
+          ]}>
+            {isAdvanced ? 'Advanced' : 'Beginner'}
+          </Text>
         </View>
       </View>
 
-      {/* Error banner */}
-      {error && (
-        <View
-          style={{
-            backgroundColor: "#F43F5E10",
-            borderWidth: 1,
-            borderColor: "#F43F5E30",
-            borderRadius: 12,
-            padding: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "#F43F5E", fontSize: 12, fontFamily: "Poppins_500Medium" }}>
-            Could not load live prices.
-          </Text>
-          <TouchableOpacity onPress={refresh}>
-            <Text style={{ color: "#4F46E5", fontSize: 11, fontFamily: "Poppins_400Regular", marginTop: 4 }}>
-              Tap to retry
-            </Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refresh}
+            tintColor={Colors.bullish.primary}
+          />
+        }
+      >
+        {/* Error banner */}
+        {error && (
+          <TouchableOpacity style={styles.errorBanner} onPress={refresh}>
+            <Text style={styles.errorText}>{error} · Tap to retry</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Featured AI insight */}
+        {featuredStock && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>AI Radar</Text>
+            <AIInsightCard
+              signal={featuredStock.signal}
+              confidence={featuredStock.confidence ?? 60}
+              explanation={
+                isAdvanced
+                  ? `${featuredStock.symbol} is showing a ${featuredStock.signal.toLowerCase()} setup. Technical indicators align with the current price action.`
+                  : `${featuredStock.name} looks interesting right now. The market data suggests ${featuredStock.signal === 'Bullish' ? 'positive momentum' : featuredStock.signal === 'Bearish' ? 'some selling pressure' : 'no strong direction yet'}.`
+              }
+              triggers={[
+                `Signal: ${featuredStock.signal}`,
+                `Confidence: ${featuredStock.confidence ?? 60}%`,
+              ]}
+              isBeginnerMode={!isAdvanced}
+            />
+          </View>
+        )}
+
+        {/* Market count (advanced only) */}
+        {isAdvanced && (
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{merged.length}</Text>
+              <Text style={styles.statLabel}>Tracking</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: Colors.bullish.primary }]}>
+                {merged.filter((s) => s.signal === 'Bullish').length}
+              </Text>
+              <Text style={styles.statLabel}>Bullish</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: Colors.bearish.primary }]}>
+                {merged.filter((s) => s.signal === 'Bearish').length}
+              </Text>
+              <Text style={styles.statLabel}>Bearish</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Beginner tip */}
+        {!isAdvanced && (
+          <View style={styles.tipCard}>
+            <Text style={styles.tipText}>
+              💡 Tap any stock below to see a plain-English breakdown of what the market is doing.
+            </Text>
+          </View>
+        )}
+
+        {/* Filter bar */}
+        <MarketFilterBar active={filter} onChange={setFilter} />
+
+        {/* Stock list */}
+        <View style={styles.stockList}>
+          {loading && merged.length === 0 ? (
+            <ActivityIndicator color={Colors.bullish.primary} style={{ marginTop: 32 }} />
+          ) : (
+            merged.map((s) => (
+              <StockCard
+                key={s.symbol}
+                symbol={s.symbol}
+                name={s.name}
+                price={s.price}
+                change={s.change}
+                changePct={s.changePct}
+                signal={s.signal}
+                confidence={s.confidence}
+                market={s.market}
+              />
+            ))
+          )}
         </View>
-      )}
 
-      {/* Beginner tip */}
-      {mode === "beginner" && (
-        <View
-          style={{
-            backgroundColor: "#4F46E510",
-            borderWidth: 1,
-            borderColor: "#4F46E525",
-            borderRadius: 12,
-            padding: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "#4F46E5", fontSize: 11, fontFamily: "Poppins_600SemiBold", marginBottom: 2 }}>
-            💡 Beginner Tip
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 11, fontFamily: "Poppins_400Regular", lineHeight: 16 }}>
-            Green means the stock is up today. Red means it's down. The signal badge shows the overall trend.
-          </Text>
-        </View>
-      )}
-
-      {/* AI Insight */}
-      <AIInsightCard
-        symbol={featuredStock.symbol}
-        signal={featuredStock.signal}
-        confidence={featuredStock.confidence}
-        explanation={`${featuredStock.name} is showing a ${featuredStock.signal} signal with ${featuredStock.confidence}% confidence based on current market indicators.`}
-        isBeginnerMode={mode === "beginner"}
-      />
-
-      {/* Market Overview */}
-      <Text style={{ color: colors.text, fontSize: 16, fontFamily: "Poppins_600SemiBold", marginBottom: 12, marginTop: 8 }}>
-        Market Overview
-      </Text>
-      <MarketFilterBar />
-
-      {/* Advanced mode info */}
-      {mode === "advanced" && (
-        <Text style={{ color: colors.muted, fontSize: 11, fontFamily: "Poppins_400Regular", marginBottom: 12 }}>
-          {filteredStocks.length} stocks · {Object.keys(quotes).length} live prices loaded
-        </Text>
-      )}
-
-      {/* Stock cards */}
-      {filteredStocks.length === 0 ? (
-        <View style={{ alignItems: "center", paddingVertical: 48 }}>
-          <Text style={{ color: colors.subtext, fontSize: 13, fontFamily: "Poppins_400Regular" }}>
-            No stocks found.
-          </Text>
-        </View>
-      ) : (
-        filteredStocks.map((stock) => (
-          <StockCard key={stock.symbol} stock={stock} />
-        ))
-      )}
-    </ScrollView>
+        <View style={{ height: 24 }} />
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex:            1,
+    backgroundColor: Colors.bg.base,
+  },
+  header: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
+    paddingHorizontal: 20,
+    paddingTop:      60,
+    paddingBottom:   12,
+  },
+  greeting: {
+    fontSize: 12,
+    color:    Colors.text.faint,
+    marginBottom: 2,
+  },
+  appName: {
+    fontSize:   24,
+    fontWeight: '700',
+    color:      Colors.text.primary,
+    letterSpacing: -0.5,
+  },
+  modeBadge: {
+    paddingHorizontal: 12,
+    paddingVertical:    5,
+    borderRadius:      100,
+  },
+  modeText: {
+    fontSize:   12,
+    fontWeight: '500',
+  },
+  content: {
+    paddingTop: 4,
+  },
+  section: {
+    paddingHorizontal: 20,
+    marginBottom:      14,
+  },
+  sectionLabel: {
+    fontSize:      10,
+    color:         Colors.text.faint,
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    marginBottom:  8,
+  },
+  statsRow: {
+    flexDirection:     'row',
+    paddingHorizontal: 20,
+    gap:               10,
+    marginBottom:      14,
+  },
+  statCard: {
+    flex:            1,
+    backgroundColor: Colors.bg.card,
+    borderRadius:    12,
+    padding:         12,
+    alignItems:      'center',
+  },
+  statValue: {
+    fontSize:   20,
+    fontWeight: '600',
+    color:      Colors.text.primary,
+  },
+  statLabel: {
+    fontSize:  11,
+    color:     Colors.text.faint,
+    marginTop: 2,
+  },
+  tipCard: {
+    marginHorizontal: 20,
+    marginBottom:     14,
+    backgroundColor:  Colors.bullish.tint,
+    borderRadius:     12,
+    padding:          12,
+  },
+  tipText: {
+    fontSize:   12,
+    color:      Colors.bullish.primary,
+    lineHeight: 18,
+  },
+  stockList: {
+    paddingHorizontal: 20,
+    paddingTop:        12,
+  },
+  errorBanner: {
+    marginHorizontal: 20,
+    marginBottom:     12,
+    backgroundColor:  Colors.bearish.tint,
+    borderRadius:     10,
+    padding:          10,
+  },
+  errorText: {
+    fontSize: 12,
+    color:    Colors.bearish.primary,
+    textAlign: 'center',
+  },
+});
