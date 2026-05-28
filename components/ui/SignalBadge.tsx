@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, SignalType, signalColor, signalTint } from '@/constants/colors';
+import { Colors, signalColor, signalTint, signalLabel } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 
 interface SignalBadgeProps {
-  signal: SignalType;
+  signal:      Signal;
   confidence?: number;
-  size?: 'sm' | 'md';
+  size?:       'sm' | 'md';
 }
 
 export default function SignalBadge({
@@ -18,16 +19,10 @@ export default function SignalBadge({
   const isSm  = size === 'sm';
 
   return (
-    <View
-      style={[
-        styles.pill,
-        { backgroundColor: tint },
-        isSm && styles.pillSm,
-      ]}
-    >
+    <View style={[styles.pill, { backgroundColor: tint }, isSm && styles.pillSm]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.label, { color }, isSm && styles.labelSm]}>
-        {signal}
+        {signalLabel(signal)}
         {confidence !== undefined ? ` · ${confidence}%` : ''}
       </Text>
     </View>
@@ -36,12 +31,12 @@ export default function SignalBadge({
 
 const styles = StyleSheet.create({
   pill: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    gap:            6,
-    paddingVertical:  5,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               6,
+    paddingVertical:   5,
     paddingHorizontal: 12,
-    borderRadius:   100,
+    borderRadius:      100,
   },
   pillSm: {
     paddingVertical:   3,
@@ -53,8 +48,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   label: {
-    fontSize:   13,
-    fontWeight: '500',
+    fontSize:      13,
+    fontWeight:    '500',
     letterSpacing: 0.1,
   },
   labelSm: {

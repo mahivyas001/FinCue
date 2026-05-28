@@ -1,16 +1,19 @@
-# backend/routers/analysis.py
-
 from fastapi import APIRouter, HTTPException
-from services.quote import fetch_daily_ohlcv, fetch_current_quote
+from services.quote import fetch_daily_ohlcv, fetch_current_quote, _get_cached, _set_cached
 from services.indicators import compute_indicators, compute_signal
 from models.analysis import AnalysisResponse
 
-router = APIRouter()
-
+router = APIRouter(prefix="/api/v1")
 
 @router.get("/analysis/{symbol}", response_model=AnalysisResponse)
 async def get_analysis(symbol: str):
     symbol = symbol.upper().strip()
+
+    # Check full analysis cache first
+    cache_key = f"analysis_{symbol}"
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         df = await fetch_daily_ohlcv(symbol)
@@ -34,7 +37,7 @@ async def get_analysis(symbol: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Indicator error: {str(e)}")
 
-    return AnalysisResponse(
+    response = AnalysisResponse(
         symbol=symbol,
         signal=signal,
         confidence=confidence,
@@ -42,3 +45,6 @@ async def get_analysis(symbol: str):
         price=quote["price"],
         change_percent=quote["change_percent"],
     )
+
+    _set_cached(cache_key, response)
+    return response

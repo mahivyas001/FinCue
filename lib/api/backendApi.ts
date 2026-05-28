@@ -37,8 +37,7 @@ function normalizeSignal(raw: "Bullish" | "Bearish" | "Neutral"): Signal {
 
 // 15 min cache per symbol
 const cache = new Map<string, { data: AnalysisResult; ts: number }>();
-const CACHE_TTL = 15 * 60 * 1000;
-
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 export async function fetchAnalysis(symbol: string): Promise<AnalysisResult> {
   const key = symbol.toUpperCase();
   const cached = cache.get(key);
@@ -60,6 +59,8 @@ export async function fetchAnalysis(symbol: string): Promise<AnalysisResult> {
   if (!res.ok) throw new Error(`Backend error: ${res.status}`);
 
   const raw: RawAnalysisResult = await res.json();
+  console.log('[backendApi] raw response:', JSON.stringify(raw));
+  console.log('[backendApi] raw:', JSON.stringify(raw, null, 2));
 
   // Normalize signal to lowercase before caching
   const data: AnalysisResult = {

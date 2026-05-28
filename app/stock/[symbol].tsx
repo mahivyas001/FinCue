@@ -59,8 +59,6 @@ export default function StockDetailScreen() {
   const maVsLabel  = analysis?.indicators?.vs_moving_avg  ?? '—';
   const volLabel   = analysis?.indicators?.volume_level   ?? '—';
   const trendLabel = analysis?.indicators?.trend_strength ?? '—';
-  const macd       = macdSignal === 'Bullish' ? 1 : macdSignal === 'Bearish' ? -1 : 0;
-  const rsiBarpct  = rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50;
 
   const beginnerTriggers = [
     'Price momentum is building',
@@ -184,7 +182,7 @@ export default function StockDetailScreen() {
 
         {/* Chart */}
         <View style={styles.section}>
-          <ChartContainer symbol={symbol ?? ''} />
+          <ChartContainer symbol={symbol ?? ''} signal={signal} />
         </View>
 
         {/* Technical indicators */}
@@ -198,12 +196,33 @@ export default function StockDetailScreen() {
             </View>
           ) : (
             <>
-              <IndicatorRow label="RSI (14)"      value={rsi ?? 0}   barPct={rsiBarpct} />
-              <IndicatorRow label="MACD"           value={macd}       barPct={macd > 0 ? 65 : macd < 0 ? 35 : 50} />
-              <IndicatorRow label="vs MA 50"       value={maVsLabel}  barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50} />
-              <IndicatorRow label="Volume"         value={volLabel}   barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25} />
-              <IndicatorRow label="Trend Strength" value={trendLabel} barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25} isLast />
-            </>
+  <IndicatorRow
+    label="RSI (14)"
+    value={rsi !== null ? rsi : '—'}
+    barPct={rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50}
+  />
+  <IndicatorRow
+    label="MACD"
+    value={macdSignal}
+    barPct={macdSignal === 'Bullish' ? 65 : macdSignal === 'Bearish' ? 35 : 50}
+  />
+  <IndicatorRow
+    label="vs MA 50"
+    value={maVsLabel}
+    barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50}
+  />
+  <IndicatorRow
+    label="Volume"
+    value={volLabel}
+    barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25}
+  />
+  <IndicatorRow
+    label="Trend Strength"
+    value={trendLabel}
+    barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25}
+    isLast
+  />
+</>
           )}
         </View>
 

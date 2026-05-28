@@ -4,5 +4,4 @@ export const API_CONFIG = {
   CACHE_TTL: 5 * 60 * 1000,
   QUOTE_CACHE_TTL_MS: 5 * 60 * 1000,
   RATE_LIMIT_DELAY: 500,
-  BACKEND_URL: "https://web-production-d01ce.up.railway.app",
-} as const;
+  BACKEND_URL: "http://192.168.1.9:8000",} as const;

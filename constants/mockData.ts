@@ -22,7 +22,7 @@ export const MOCK_STOCKS: Stock[] = [
     confidence: 65,
   },
   {
-    symbol: "RELIANCE",
+  symbol: 'RELIANCE.BSE', 
     name: "Reliance Industries",
     price: 2847.0,
     change: 12.5,

@@ -2,7 +2,8 @@ import React from 'react';
 import {
   View, Text, TouchableOpacity, ActivityIndicator, StyleSheet,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
+import { Colors, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
 import { useStockChart } from '@/hooks/useStockChart';
@@ -13,11 +14,13 @@ type TimeFrame = typeof TIMEFRAMES[number];
 
 interface ChartContainerProps {
   symbol: string;
+  signal?: Signal;
 }
 
-export default function ChartContainer({ symbol }: ChartContainerProps) {
+export default function ChartContainer({ symbol, signal = 'neutral' }: ChartContainerProps) {
   const { mode } = useAppStore();
   const isAdvanced = mode === 'advanced';
+  const color = signalColor(signal);
 
   const [timeframe, setTimeframe] = React.useState<TimeFrame>('1W');
   const { data, isLoading, error, refresh } = useStockChart(symbol, timeframe);
@@ -31,7 +34,10 @@ export default function ChartContainer({ symbol }: ChartContainerProps) {
           return (
             <TouchableOpacity
               key={tf}
-              style={[styles.tab, active && styles.tabActive]}
+              style={[
+                styles.tab,
+                active && { backgroundColor: color },
+              ]}
               onPress={() => setTimeframe(tf)}
               activeOpacity={0.75}
             >
@@ -47,19 +53,19 @@ export default function ChartContainer({ symbol }: ChartContainerProps) {
       <View style={styles.chartArea}>
         {isLoading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={Colors.bullish.primary} size="small" />
+            <ActivityIndicator color={color} size="small" />
           </View>
         ) : error ? (
           <View style={styles.loader}>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={refresh} style={styles.retryBtn}>
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={[styles.retryText, { color }]}>Retry</Text>
             </TouchableOpacity>
           </View>
         ) : isAdvanced ? (
           <CandlestickChart data={data} height={200} />
         ) : (
-          <LineChart data={data} height={160} />
+          <LineChart data={data} height={160} signal={signal} />
         )}
       </View>
 
@@ -98,9 +104,6 @@ const styles = StyleSheet.create({
     borderRadius:      100,
     backgroundColor:   Colors.bg.elevated,
   },
-  tabActive: {
-    backgroundColor: Colors.bullish.primary,
-  },
   tabLabel: {
     fontSize:   12,
     fontWeight: '500',
@@ -119,8 +122,8 @@ const styles = StyleSheet.create({
     gap:            8,
   },
   errorText: {
-    fontSize: 12,
-    color:    Colors.text.faint,
+    fontSize:  12,
+    color:     Colors.text.faint,
     textAlign: 'center',
   },
   retryBtn: {
@@ -131,7 +134,6 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: 12,
-    color:    Colors.bullish.primary,
   },
   legend: {
     flexDirection: 'row',

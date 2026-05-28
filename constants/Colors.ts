@@ -11,12 +11,12 @@ export const Colors = {
   // ── Accent / Signal ──────────────────────────
   bullish: {
     primary: '#FFB3C6',
-    tint:    '#2a1a1e',
+    tint:    '#2a1a20',  
     dim:     '#7a4a55',
   },
   bearish: {
     primary: '#93C5FD',
-    tint:    '#161e2e',
+    tint:    '#141c2e',
     dim:     '#3a5070',
   },
   neutral: {

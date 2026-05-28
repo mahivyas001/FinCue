@@ -1,3 +1,4 @@
+
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useState } from "react";
 import { MOCK_STOCKS } from "@/constants/mockData";
@@ -88,4 +89,5 @@ export default function SearchScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+} 
+

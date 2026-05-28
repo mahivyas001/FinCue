@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, {
   Path, Defs, LinearGradient, Stop, Line, Circle, Text as SvgText,
 } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { Colors, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 
 interface ChartPoint {
   date:  string;
@@ -11,8 +12,9 @@ interface ChartPoint {
 }
 
 interface LineChartProps {
-  data:   ChartPoint[];
+  data:    ChartPoint[];
   height?: number;
+  signal?: Signal;
 }
 
 const W = Dimensions.get('window').width - 40;
@@ -30,7 +32,9 @@ function smooth(points: { x: number; y: number }[]): string {
   return d;
 }
 
-export default function LineChart({ data, height = 160 }: LineChartProps) {
+export default function LineChart({ data, height = 160, signal = 'neutral' }: LineChartProps) {
+  const color = signalColor(signal);
+
   if (!data || data.length < 2) {
     return (
       <View style={[styles.empty, { height }]}>
@@ -53,58 +57,52 @@ export default function LineChart({ data, height = 160 }: LineChartProps) {
   }));
 
   const linePath = smooth(points);
-  const areaPath = linePath + ` L ${points[points.length - 1].x} ${PADDING.top + innerH} L ${points[0].x} ${PADDING.top + innerH} Z`;
+  const areaPath = linePath
+    + ` L ${points[points.length - 1].x} ${PADDING.top + innerH}`
+    + ` L ${points[0].x} ${PADDING.top + innerH} Z`;
 
-  // peak point for crosshair
   const peakIdx = closes.indexOf(maxVal);
   const peakPt  = points[peakIdx];
 
-  // sparse x-axis labels
-  const labelCount = Math.min(5, data.length);
+  const labelCount   = Math.min(5, data.length);
   const labelIndices = Array.from({ length: labelCount }, (_, i) =>
     Math.round(i * (data.length - 1) / (labelCount - 1))
   );
 
-  // live endpoint
   const last = points[points.length - 1];
 
   return (
     <View>
       <Svg width={W} height={height}>
         <Defs>
-          <LinearGradient id="pinkGrad" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%"   stopColor={Colors.bullish.primary} stopOpacity={0.22} />
-            <Stop offset="100%" stopColor={Colors.bullish.primary} stopOpacity={0}    />
+          <LinearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%"   stopColor={color} stopOpacity={0.22} />
+            <Stop offset="100%" stopColor={color} stopOpacity={0}    />
           </LinearGradient>
         </Defs>
 
-        {/* Gradient fill */}
-        <Path d={areaPath} fill="url(#pinkGrad)" />
+        <Path d={areaPath} fill="url(#chartGrad)" />
 
-        {/* Line */}
         <Path
           d={linePath}
           fill="none"
-          stroke={Colors.bullish.primary}
+          stroke={color}
           strokeWidth={2}
           strokeLinecap="round"
         />
 
-        {/* Dashed crosshair at peak */}
         <Line
           x1={peakPt.x} y1={PADDING.top}
           x2={peakPt.x} y2={PADDING.top + innerH}
-          stroke={Colors.bullish.primary}
+          stroke={color}
           strokeWidth={0.8}
           strokeDasharray="3,3"
           opacity={0.5}
         />
 
-        {/* Live dot at end */}
-        <Circle cx={last.x} cy={last.y} r={5}  fill={Colors.bullish.primary} opacity={0.3} />
-        <Circle cx={last.x} cy={last.y} r={3}  fill={Colors.bullish.primary} />
+        <Circle cx={last.x} cy={last.y} r={5} fill={color} opacity={0.3} />
+        <Circle cx={last.x} cy={last.y} r={3} fill={color} />
 
-        {/* X-axis labels */}
         {labelIndices.map((idx) => (
           <SvgText
             key={`lbl-${idx}`}

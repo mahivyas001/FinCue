@@ -18,6 +18,7 @@ export function useAnalysis(symbol: string | undefined) {
     if (!symbol) return;
     setIsLoading(true);
     setError(null);
+     console.log('[useAnalysis] Fetching for:', symbol); 
     try {
       const data = await fetchAnalysis(symbol);
       // Normalize signal to lowercase to match our Signal type
