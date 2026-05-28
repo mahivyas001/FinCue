@@ -1,4 +1,5 @@
 import React from 'react';
+import { useExplanation } from '@/hooks/useExplanation';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, RefreshControl,
@@ -40,6 +41,15 @@ export default function StockDetailScreen() {
     refresh:    refreshAnalysis,
   } = useAnalysis(symbol ?? '');
 
+  // ── AI Explanation (Step 13A) ──────────────────────────────
+  const explanationMode = isAdvanced ? 'advanced' : 'beginner';
+  const {
+    data:    explanationData,
+    loading: explanationLoading,
+    error:   explanationError,
+  } = useExplanation(symbol ?? '', explanationMode);
+  // ──────────────────────────────────────────────────────────
+
   const isSaved   = watchlist.some((item) => item.symbol === (symbol ?? ''));
   const isLoading = quoteLoading || analysisLoading;
 
@@ -49,11 +59,9 @@ export default function StockDetailScreen() {
   const currency  = (stockMeta?.market === 'IN') ? '₹' : '$';
   const isPos     = change >= 0;
 
-  // Signal is already lowercase from useAnalysis (normalizeSignal in hook)
-  const signal: Signal     = (analysis?.signal ?? 'neutral') as Signal;
-  const confidence         = analysis?.confidence ?? 0;
+  const signal: Signal = (analysis?.signal ?? 'neutral') as Signal;
+  const confidence     = analysis?.confidence ?? 0;
 
-  // Indicators nested under analysis.indicators
   const rsi        = analysis?.indicators?.rsi            ?? null;
   const macdSignal = analysis?.indicators?.macd_signal    ?? '—';
   const maVsLabel  = analysis?.indicators?.vs_moving_avg  ?? '—';
@@ -71,19 +79,19 @@ export default function StockDetailScreen() {
     `MA50: ${maVsLabel} · Trend: ${trendLabel}`,
   ];
 
-  const beginnerExplanation =
-    signal === 'bullish'
-      ? "Buyers have been pushing this stock up steadily. The numbers suggest positive momentum, though it's worth watching if it starts to slow down."
+  // ── Explanation text logic ─────────────────────────────────
+  const explanationText = explanationLoading
+    ? 'Generating AI insight...'
+    : explanationError
+    ? isAdvanced
+      ? `RSI at ${rsi?.toFixed(1) ?? '—'} — MACD ${macdSignal.toLowerCase()} — ${maVsLabel} MA50 — ${trendLabel} trend.`
+      : signal === 'bullish'
+      ? "Buyers have been pushing this stock up steadily. Positive momentum detected."
       : signal === 'bearish'
-      ? "Selling pressure has been building. The stock has been losing ground recently and the indicators suggest caution for now."
-      : "The stock isn't showing a strong direction yet — it's in a wait-and-see zone. No major signals at the moment.";
-
-  const advancedExplanation =
-    signal === 'bullish'
-      ? `RSI at ${rsi?.toFixed(1) ?? '—'} indicates elevated momentum. MACD is ${macdSignal.toLowerCase()} and price is ${maVsLabel.toLowerCase()} the 50-day MA. ADX confirms ${trendLabel.toLowerCase()} trend strength.`
-      : signal === 'bearish'
-      ? `RSI at ${rsi?.toFixed(1) ?? '—'} showing weakening momentum. MACD is ${macdSignal.toLowerCase()} with price ${maVsLabel.toLowerCase()} MA50. Watch for further distribution.`
-      : `Indicators are mixed. RSI at ${rsi?.toFixed(1) ?? '—'} — no directional conviction. Volume is ${volLabel.toLowerCase()} with ${trendLabel.toLowerCase()} trend strength.`;
+      ? "Selling pressure has been building. Indicators suggest caution."
+      : "No strong direction yet — the stock is in a wait-and-see zone."
+    : explanationData?.explanation ?? '';
+  // ──────────────────────────────────────────────────────────
 
   const handleRefresh = () => {
     refreshQuote();
@@ -196,45 +204,45 @@ export default function StockDetailScreen() {
             </View>
           ) : (
             <>
-  <IndicatorRow
-    label="RSI (14)"
-    value={rsi !== null ? rsi : '—'}
-    barPct={rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50}
-  />
-  <IndicatorRow
-    label="MACD"
-    value={macdSignal}
-    barPct={macdSignal === 'Bullish' ? 65 : macdSignal === 'Bearish' ? 35 : 50}
-  />
-  <IndicatorRow
-    label="vs MA 50"
-    value={maVsLabel}
-    barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50}
-  />
-  <IndicatorRow
-    label="Volume"
-    value={volLabel}
-    barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25}
-  />
-  <IndicatorRow
-    label="Trend Strength"
-    value={trendLabel}
-    barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25}
-    isLast
-  />
-</>
+              <IndicatorRow
+                label="RSI (14)"
+                value={rsi !== null ? rsi : '—'}
+                barPct={rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50}
+              />
+              <IndicatorRow
+                label="MACD"
+                value={macdSignal}
+                barPct={macdSignal === 'Bullish' ? 65 : macdSignal === 'Bearish' ? 35 : 50}
+              />
+              <IndicatorRow
+                label="vs MA 50"
+                value={maVsLabel}
+                barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50}
+              />
+              <IndicatorRow
+                label="Volume"
+                value={volLabel}
+                barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25}
+              />
+              <IndicatorRow
+                label="Trend Strength"
+                value={trendLabel}
+                barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25}
+                isLast
+              />
+            </>
           )}
         </View>
 
-        {/* AI Insight */}
+        {/* AI Insight — now powered by Claude API */}
         <View style={styles.section}>
           <AIInsightCard
             signal={signal}
             confidence={confidence}
-            explanation={isAdvanced ? advancedExplanation : beginnerExplanation}
+            explanation={explanationText}
             triggers={isAdvanced ? advancedTriggers : beginnerTriggers}
             isBeginnerMode={!isAdvanced}
-            isLoading={analysisLoading}
+            isLoading={analysisLoading || explanationLoading}
           />
         </View>
 

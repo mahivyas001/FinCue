@@ -1,20 +1,23 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import analysis
+from routers.analysis import router as analysis_router
+from routers.explain import router as explain_router
+from dotenv import load_dotenv
 
-app = FastAPI(title="FinCue API", version="1.0.0")
+load_dotenv()
+
+app = FastAPI(title="FinCue API")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(analysis.router)
-
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "FinCue Backend"}
+    return {"status": "ok"}
+
+app.include_router(analysis_router)
+app.include_router(explain_router)
