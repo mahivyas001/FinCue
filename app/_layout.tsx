@@ -1,27 +1,22 @@
 // app/_layout.tsx
 
 import { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import '@/global.css';
 
 function OnboardingGate() {
   const router = useRouter();
-  const segments = useSegments();
   const hasOnboarded = useAppStore((s) => s.hasOnboarded);
 
   useEffect(() => {
-    const firstSegment = segments[0] as string | undefined;
-    const inOnboarding = firstSegment === 'onboarding';
-
-    if (!hasOnboarded && !inOnboarding) {
-      router.replace('/onboarding' as any);
+    if (!hasOnboarded) {
+      const timer = setTimeout(() => {
+        router.replace('/onboarding');
+      }, 0);
+      return () => clearTimeout(timer);
     }
-
-    if (hasOnboarded && inOnboarding) {
-      router.replace('/(tabs)/' as any);
-    }
-  }, [hasOnboarded, segments]);
+  }, [hasOnboarded]);
 
   return null;
 }

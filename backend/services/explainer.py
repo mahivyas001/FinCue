@@ -15,7 +15,7 @@ The backend has calculated these indicators for {symbol}:
 - Volume Level: {volume}
 - Trend Strength: {trend}
 
-Explain what this means in 2-3 simple sentences. Use plain English. No jargon. 
+Explain what this means in 2-3 simple sentences. Use plain English. No jargon.
 Do NOT predict the future or guarantee any outcome.
 Do NOT use the words BUY or SELL.
 End with one short educational tip about what the user should watch next."""
@@ -28,7 +28,7 @@ Computed indicators for {symbol}:
 - MACD: {macd}
 - MA50: {ma}
 - Volume: {volume}
-- ADX Trend: {trend}
+- Trend Strength: {trend}
 
 Write a concise 2-3 sentence technical summary. Use proper trading terminology.
 Do NOT predict future price or guarantee outcomes.
@@ -47,9 +47,7 @@ def set_cached_explanation(symbol: str, mode: str, text: str) -> None:
 
 def build_prompt(symbol: str, mode: str, data: AnalysisResponse) -> str:
     rsi_val = data.indicators.rsi
-    if rsi_val is None:
-        rsi_label = "unavailable"
-    elif rsi_val >= 70:
+    if rsi_val >= 70:
         rsi_label = "overbought zone"
     elif rsi_val <= 30:
         rsi_label = "oversold zone"
@@ -60,11 +58,11 @@ def build_prompt(symbol: str, mode: str, data: AnalysisResponse) -> str:
         "symbol": symbol.upper(),
         "signal": data.signal,
         "confidence": data.confidence,
-        "rsi": round(rsi_val, 2) if rsi_val else "N/A",
+        "rsi": round(rsi_val, 2),
         "rsi_label": rsi_label,
-        "macd": data.indicators.macd,
-        "ma": data.indicators.moving_average,
-        "volume": data.indicators.volume,
+        "macd": data.indicators.macd_signal,
+        "ma": data.indicators.vs_moving_avg,
+        "volume": data.indicators.volume_level,
         "trend": data.indicators.trend_strength,
     }
 
