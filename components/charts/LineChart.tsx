@@ -18,7 +18,7 @@ interface LineChartProps {
 }
 
 const W = Dimensions.get('window').width - 40;
-const PADDING = { top: 20, bottom: 30, left: 4, right: 4 };
+const PADDING = { top: 20, bottom: 36, left: 4, right: 4 };
 
 function smooth(points: { x: number; y: number }[]): string {
   if (points.length < 2) return '';
@@ -103,18 +103,22 @@ export default function LineChart({ data, height = 160, signal = 'neutral' }: Li
         <Circle cx={last.x} cy={last.y} r={5} fill={color} opacity={0.3} />
         <Circle cx={last.x} cy={last.y} r={3} fill={color} />
 
-        {labelIndices.map((idx) => (
-          <SvgText
-            key={`lbl-${idx}`}
-            x={points[idx].x}
-            y={height - 4}
-            fontSize={10}
-            fill={Colors.text.faint}
-            textAnchor="middle"
-          >
-            {data[idx].date.slice(5)}
-          </SvgText>
-        ))}
+{labelIndices.map((idx, pos) => (
+  <SvgText
+    key={`lbl-${idx}`}
+    x={points[idx].x}
+    y={height - 8}
+    fontSize={10}
+    fill={Colors.text.faint}
+    textAnchor={
+      pos === 0 ? 'start' :
+      pos === labelIndices.length - 1 ? 'end' :
+      'middle'
+    }
+  >
+    {data[idx].date.slice(5)}
+  </SvgText>
+))}
       </Svg>
     </View>
   );
