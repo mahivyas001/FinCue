@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchExplanation, ExplanationResponse } from '@/lib/api/explainApi';
 
 type State = {
@@ -17,19 +17,33 @@ export function useExplanation(
     error: null,
   });
 
-  const load = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      const data = await fetchExplanation(symbol, mode);
-      setState({ data, loading: false, error: null });
-    } catch (e: any) {
-      setState({ data: null, loading: false, error: e.message });
-    }
+  useEffect(() => {
+    if (!symbol) return;
+
+    let cancelled = false;
+
+    setState({ data: null, loading: true, error: null });
+
+    fetchExplanation(symbol, mode)
+      .then((data) => {
+        if (!cancelled) setState({ data, loading: false, error: null });
+      })
+      .catch((e: any) => {
+        if (!cancelled) setState({ data: null, loading: false, error: e.message });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [symbol, mode]);
 
-  useEffect(() => {
-    if (symbol) load();
-  }, [load, symbol, mode]);
+  const refresh = () => {
+    if (!symbol) return;
+    setState({ data: null, loading: true, error: null });
+    fetchExplanation(symbol, mode)
+      .then((data) => setState({ data, loading: false, error: null }))
+      .catch((e: any) => setState({ data: null, loading: false, error: e.message }));
+  };
 
-  return { ...state, refresh: load };
+  return { ...state, refresh };
 }

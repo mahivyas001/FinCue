@@ -1,84 +1,87 @@
-import { Signal } from '@/types/stock';
-
 export const Colors = {
-  // ── Backgrounds ──────────────────────────────
-  bg: {
-    base:     '#111111',
-    card:     '#1a1a1a',
-    elevated: '#222222',
+  primary: {
+    main:  '#93C5FD',
+    light: '#BFDBFE',
+    dark:  '#60A5FA',
+    tint:  'rgba(147, 197, 253, 0.10)',
   },
-
-  // ── Accent / Signal ──────────────────────────
   bullish: {
-    primary: '#FFB3C6',
-    tint:    '#2a1a20',  
-    dim:     '#7a4a55',
+    primary: '#93C5FD',
+    tint:    'rgba(147, 197, 253, 0.10)',
+    text:    '#BFDBFE',
   },
   bearish: {
-    primary: '#93C5FD',
-    tint:    '#141c2e',
-    dim:     '#3a5070',
+    primary: '#FDA4AF',
+    tint:    'rgba(253, 164, 175, 0.10)',
+    text:    '#FECDD3',
   },
   neutral: {
-    primary: '#555555',
-    tint:    '#1a1a1a',
-    dim:     '#444444',
+    primary: '#6B7280',
+    tint:    'rgba(107, 114, 128, 0.10)',
+    text:    '#9CA3AF',
   },
-
-  // ── Text ─────────────────────────────────────
+  bg: {
+    base:     '#09090F',
+    card:     '#111117',
+    elevated: '#18181F',
+    overlay:  'rgba(9, 9, 15, 0.97)',
+  },
   text: {
-    primary:   '#FFFFFF',
-    secondary: '#AAAAAA',
-    muted:     '#888888',
-    dim:       '#555555',
-    faint:     '#444444',
-    highlight: '#DDDDDD',
+    primary: '#FFFFFF',
+    muted:   '#6B7280',
+    faint:   '#374151',
   },
-
-  // ── UI ───────────────────────────────────────
-  border:     '#1e1e1e',
-  divider:    '#1e1e1e',
-  icon:       '#444444',
-  iconActive: '#FFB3C6',
+  border: {
+    default: 'rgba(255, 255, 255, 0.06)',
+    muted:   'rgba(255, 255, 255, 0.03)',
+  },
+  chart: {
+    bullish: '#60A5FA',
+    bearish: '#F472B6',
+    neutral: '#6B7280',
+    grid:    'rgba(255, 255, 255, 0.04)',
+  },
+  pink: {
+    primary: '#FDA4AF',
+    light:   '#FECDD3',
+    tint:    'rgba(253, 164, 175, 0.10)',
+  },
+  blue: {
+    primary: '#93C5FD',
+    light:   '#BFDBFE',
+    tint:    'rgba(147, 197, 253, 0.10)',
+  },
 };
 
-// ── Signal type ───────────────────────────────
-// Single source of truth is lowercase Signal from @/types/stock.
-// SignalType is kept as an alias for any legacy usage — both are identical.
-export type { Signal };
-export type SignalType = Signal; // alias — 'bullish' | 'bearish' | 'neutral'
+export type Signal = 'bullish' | 'bearish' | 'neutral';
 
-// ── Signal helpers ────────────────────────────
-export const signalColor = (signal: Signal): string => ({
-  bullish: Colors.bullish.primary,
-  bearish: Colors.bearish.primary,
-  neutral: Colors.neutral.primary,
-}[signal] ?? Colors.neutral.primary);
+export function signalColor(signal: Signal): string {
+  switch (signal) {
+    case 'bullish': return Colors.bullish.primary;
+    case 'bearish': return Colors.bearish.primary;
+    default:        return Colors.neutral.primary;
+  }
+}
 
-export const signalTint = (signal: Signal): string => ({
-  bullish: Colors.bullish.tint,
-  bearish: Colors.bearish.tint,
-  neutral: Colors.neutral.tint,
-}[signal] ?? Colors.neutral.tint);
+export function signalTint(signal: Signal): string {
+  switch (signal) {
+    case 'bullish': return Colors.bullish.tint;
+    case 'bearish': return Colors.bearish.tint;
+    default:        return Colors.neutral.tint;
+  }
+}
 
-export const signalDim = (signal: Signal): string => ({
-  bullish: Colors.bullish.dim,
-  bearish: Colors.bearish.dim,
-  neutral: Colors.neutral.dim,
-}[signal] ?? Colors.neutral.dim);
+export function signalLabel(signal: Signal): string {
+  switch (signal) {
+    case 'bullish': return 'Bullish';
+    case 'bearish': return 'Bearish';
+    default:        return 'Neutral';
+  }
+}
 
-// Display label — capitalizes for UI only
-export const signalLabel = (signal: Signal): string => ({
-  bullish: 'Bullish',
-  bearish: 'Bearish',
-  neutral: 'Neutral',
-}[signal] ?? 'Neutral');
-
-// Indicator value color
-export const valueColor = (value: number | string | null): string => {
-  if (value === null || value === undefined) return Colors.text.faint;
-  if (typeof value === 'string') return Colors.neutral.primary;
-  if (value > 0) return Colors.bullish.primary;
-  if (value < 0) return Colors.bearish.primary;
-  return Colors.neutral.primary;
-};
+export function valueColor(value: number | null): string {
+  if (value === null) return Colors.neutral.text;
+  if (value > 0)      return Colors.bullish.text;
+  if (value < 0)      return Colors.bearish.text;
+  return Colors.neutral.text;
+}

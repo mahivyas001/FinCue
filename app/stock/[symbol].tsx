@@ -18,12 +18,12 @@ import { useAnalysis } from '@/hooks/useAnalysis';
 import { MOCK_STOCKS } from '@/constants/mockData';
 
 export default function StockDetailScreen() {
-  const { symbol } = useLocalSearchParams<{ symbol: string }>();
-  const router     = useRouter();
-  const { mode, watchlist } = useAppStore();
-  const toggleWatchlist = (useAppStore as any)(
-    (state: any) => state.toggleWatchlist ?? (() => {})
-  );
+  const params = useLocalSearchParams();
+  const symbol = params.symbol as string;
+  const router = useRouter();
+
+  const mode = useAppStore(s => s.mode);
+  const watchlist = useAppStore(s => s.watchlist);
   const isAdvanced = mode === 'advanced';
 
   const stockMeta = MOCK_STOCKS.find((s) => s.symbol === symbol);
@@ -31,26 +31,24 @@ export default function StockDetailScreen() {
   const {
     stock,
     isLoading: quoteLoading,
-    refresh:   refreshQuote,
+    refresh: refreshQuote,
   } = useStockQuote(symbol ?? '');
 
   const {
     analysis,
-    isLoading:  analysisLoading,
-    error:      analysisError,
-    refresh:    refreshAnalysis,
+    isLoading: analysisLoading,
+    error: analysisError,
+    refresh: refreshAnalysis,
   } = useAnalysis(symbol ?? '');
 
-  // ── AI Explanation (Step 13A) ──────────────────────────────
   const explanationMode = isAdvanced ? 'advanced' : 'beginner';
   const {
-    data:    explanationData,
+    data: explanationData,
     loading: explanationLoading,
-    error:   explanationError,
+    error: explanationError,
   } = useExplanation(symbol ?? '', explanationMode);
-  // ──────────────────────────────────────────────────────────
 
-  const isSaved   = watchlist.some((item) => item.symbol === (symbol ?? ''));
+  const isSaved = watchlist.includes(symbol ?? '');
   const isLoading = quoteLoading || analysisLoading;
 
   const price     = stock?.price         ?? stockMeta?.price         ?? 0;
@@ -79,7 +77,6 @@ export default function StockDetailScreen() {
     `MA50: ${maVsLabel} · Trend: ${trendLabel}`,
   ];
 
-  // ── Explanation text logic ─────────────────────────────────
   const explanationText = explanationLoading
     ? 'Generating AI insight...'
     : explanationError
@@ -91,7 +88,14 @@ export default function StockDetailScreen() {
       ? "Selling pressure has been building. Indicators suggest caution."
       : "No strong direction yet — the stock is in a wait-and-see zone."
     : explanationData?.explanation ?? '';
-  // ──────────────────────────────────────────────────────────
+
+  const handleToggleWatchlist = () => {
+    if (isSaved) {
+      useAppStore.getState().removeFromWatchlist(symbol ?? '');
+    } else {
+      useAppStore.getState().addToWatchlist(symbol ?? '');
+    }
+  };
 
   const handleRefresh = () => {
     refreshQuote();
@@ -111,16 +115,12 @@ export default function StockDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
           <ChevronLeft size={20} color={Colors.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{stockMeta?.name ?? symbol}</Text>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => toggleWatchlist(symbol ?? '')}
-        >
+        <TouchableOpacity style={styles.iconBtn} onPress={handleToggleWatchlist}>
           <Star
             size={18}
             color={isSaved ? Colors.bullish.primary : Colors.text.faint}
@@ -140,7 +140,6 @@ export default function StockDetailScreen() {
           />
         }
       >
-        {/* Price hero */}
         <View style={styles.priceHero}>
           <Text style={styles.symbolLabel}>
             {symbol} · {stockMeta?.market === 'IN' ? 'NSE' : 'NASDAQ'}
@@ -163,7 +162,6 @@ export default function StockDetailScreen() {
           </View>
         </View>
 
-        {/* Signal + refresh row */}
         <View style={styles.signalRow}>
           <SignalBadge signal={signal} confidence={confidence} size="md" />
           <TouchableOpacity
@@ -178,7 +176,6 @@ export default function StockDetailScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Analysis error banner */}
         {analysisError && (
           <View style={styles.errorBanner}>
             <AlertCircle size={14} color={Colors.bearish.primary} />
@@ -188,12 +185,10 @@ export default function StockDetailScreen() {
           </View>
         )}
 
-        {/* Chart */}
         <View style={styles.section}>
           <ChartContainer symbol={symbol ?? ''} signal={signal} />
         </View>
 
-        {/* Technical indicators */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Technical Signals</Text>
           {analysisLoading ? (
@@ -234,7 +229,6 @@ export default function StockDetailScreen() {
           )}
         </View>
 
-        {/* AI Insight — now powered by Claude API */}
         <View style={styles.section}>
           <AIInsightCard
             signal={signal}
@@ -246,7 +240,6 @@ export default function StockDetailScreen() {
           />
         </View>
 
-        {/* Historical context */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Historical Context</Text>
           <Text style={styles.historicalText}>
@@ -268,31 +261,31 @@ export default function StockDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:          { flex: 1, backgroundColor: Colors.bg.base },
-  header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
-  iconBtn:         { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:     { fontSize: 14, color: Colors.text.muted, letterSpacing: 0.05 },
-  content:         { paddingHorizontal: 20, paddingTop: 8 },
-  priceHero:       { alignItems: 'center', paddingTop: 16, paddingBottom: 12 },
-  symbolLabel:     { fontSize: 12, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 6 },
-  priceNumber:     { fontSize: 52, fontWeight: '600', color: Colors.text.primary, letterSpacing: -2, lineHeight: 56 },
-  changePill:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 14, borderRadius: 100, marginTop: 10, minHeight: 30 },
-  liveDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.bullish.primary },
-  changePillText:  { fontSize: 13, fontWeight: '500' },
-  signalRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  refreshBtn:      { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
-  errorBanner:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.bearish.tint, borderRadius: 10, padding: 10, marginBottom: 12 },
-  errorText:       { fontSize: 12, color: Colors.bearish.primary, flex: 1 },
-  section:         { marginBottom: 14 },
-  card:            { backgroundColor: Colors.bg.card, borderRadius: 16, padding: 16, marginBottom: 14 },
-  sectionLabel:    { fontSize: 10, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 12 },
-  historicalText:  { fontSize: 13, color: Colors.text.muted, lineHeight: 20, marginBottom: 10 },
-  disclaimerRow:   { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  disclaimerText:  { fontSize: 11, color: Colors.text.faint },
-  shimmerGroup:    { gap: 12 },
-  shimmer:         { height: 12, borderRadius: 6, backgroundColor: Colors.bg.elevated },
-  notFound:        { flex: 1, backgroundColor: Colors.bg.base, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText:    { fontSize: 14, color: Colors.text.muted },
-  backBtn:         { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.bg.card, borderRadius: 10 },
-  backBtnText:     { fontSize: 13, color: Colors.bullish.primary },
+  screen:         { flex: 1, backgroundColor: Colors.bg.base },
+  header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  iconBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
+  headerTitle:    { fontSize: 14, color: Colors.text.muted, letterSpacing: 0.05 },
+  content:        { paddingHorizontal: 20, paddingTop: 8 },
+  priceHero:      { alignItems: 'center', paddingTop: 16, paddingBottom: 12 },
+  symbolLabel:    { fontSize: 12, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 6 },
+  priceNumber:    { fontSize: 52, fontWeight: '600', color: Colors.text.primary, letterSpacing: -2, lineHeight: 56 },
+  changePill:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 14, borderRadius: 100, marginTop: 10, minHeight: 30 },
+  liveDot:        { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.bullish.primary },
+  changePillText: { fontSize: 13, fontWeight: '500' },
+  signalRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
+  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.bearish.tint, borderRadius: 10, padding: 10, marginBottom: 12 },
+  errorText:      { fontSize: 12, color: Colors.bearish.primary, flex: 1 },
+  section:        { marginBottom: 14 },
+  card:           { backgroundColor: Colors.bg.card, borderRadius: 16, padding: 16, marginBottom: 14 },
+  sectionLabel:   { fontSize: 10, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 12 },
+  historicalText: { fontSize: 13, color: Colors.text.muted, lineHeight: 20, marginBottom: 10 },
+  disclaimerRow:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  disclaimerText: { fontSize: 11, color: Colors.text.faint },
+  shimmerGroup:   { gap: 12 },
+  shimmer:        { height: 12, borderRadius: 6, backgroundColor: Colors.bg.elevated },
+  notFound:       { flex: 1, backgroundColor: Colors.bg.base, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  notFoundText:   { fontSize: 14, color: Colors.text.muted },
+  backBtn:        { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.bg.card, borderRadius: 10 },
+  backBtnText:    { fontSize: 13, color: Colors.bullish.primary },
 });

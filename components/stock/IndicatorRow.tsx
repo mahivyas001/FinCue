@@ -3,10 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Colors, valueColor } from '@/constants/colors';
 
 interface IndicatorRowProps {
-  label:     string;
-  value:     string | number;
-  barPct?:   number;   // 0–100 for the mini progress bar
-  isLast?:   boolean;
+  label:   string;
+  value:   string | number;
+  barPct?: number;
+  isLast?: boolean;
 }
 
 export default function IndicatorRow({
@@ -21,7 +21,6 @@ export default function IndicatorRow({
     ? (value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1))
     : value;
 
-  // bar color matches value color
   const barColor = numericVal === null
     ? Colors.neutral.primary
     : numericVal > 0
@@ -40,7 +39,10 @@ export default function IndicatorRow({
             <View
               style={[
                 styles.barFill,
-                { width: `${Math.min(100, Math.max(0, barPct))}%` as any, backgroundColor: barColor },
+                {
+                  width: `${Math.min(100, Math.max(0, barPct))}%` as any,
+                  backgroundColor: barColor,
+                },
               ]}
             />
           </View>
@@ -53,14 +55,14 @@ export default function IndicatorRow({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
     paddingVertical: 11,
   },
   rowBorder: {
     borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.border.default, // ← was Colors.border (object, not string)
   },
   label: {
     fontSize: 13,

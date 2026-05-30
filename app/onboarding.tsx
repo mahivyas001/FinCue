@@ -1,7 +1,3 @@
-// app/onboarding.tsx
-// FinCue Onboarding — 3 slides
-// Crypto-dark aesthetic: deep blacks, neon indigo accents, glassy cards
-
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -52,56 +48,71 @@ const POPULAR_STOCKS = [
   { symbol: 'AMZN', name: 'Amazon' },
 ];
 
-// ─── Intro Visual ─────────────────────────────────────────────────────────────
-
 function IntroVisual() {
   return (
-    <View className="items-center justify-center py-6">
-      {/* Glow behind card */}
-      <View
-        className="absolute w-48 h-48 rounded-full bg-[#4F46E5]/20"
-        style={{ top: 10, alignSelf: 'center' }}
-      />
-      {/* Stacked cards */}
-      <View className="relative w-72 h-44">
-        <View
-          className="absolute inset-0 rounded-2xl bg-[#0F1629] border border-[#4F46E5]/20"
-          style={{ transform: [{ rotate: '-5deg' }, { translateY: 10 }] }}
-        />
-        <View
-          className="absolute inset-0 rounded-2xl bg-[#111827] border border-[#4F46E5]/40"
-          style={{ transform: [{ rotate: '2.5deg' }, { translateY: 5 }] }}
-        />
-        {/* Main card */}
-        <View className="absolute inset-0 rounded-2xl border border-[#4F46E5]/70 overflow-hidden">
-          {/* Subtle gradient top */}
-          <View className="absolute inset-x-0 top-0 h-16 bg-[#4F46E5]/8" />
-          <View className="p-4 flex-1">
-            <View className="flex-row items-center justify-between mb-3">
-              <View>
-                <Text className="text-white font-bold text-lg tracking-wide">AAPL</Text>
-                <Text className="text-slate-500 text-xs">Apple Inc.</Text>
-              </View>
-              <View className="flex-row items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-3 py-1">
-                <View className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <Text className="text-emerald-400 text-xs font-bold tracking-wider">BULLISH</Text>
-              </View>
+    <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+      <View style={{
+        width: 288, height: 176,
+        position: 'relative',
+      }}>
+        <View style={{
+          position: 'absolute', inset: 0,
+          borderRadius: 20,
+          backgroundColor: '#0D0D14',
+          borderWidth: 1,
+          borderColor: 'rgba(147,197,253,0.08)',
+          transform: [{ rotate: '-4deg' }, { translateY: 10 }],
+        }} />
+        <View style={{
+          position: 'absolute', inset: 0,
+          borderRadius: 20,
+          backgroundColor: '#111117',
+          borderWidth: 1,
+          borderColor: 'rgba(147,197,253,0.15)',
+          transform: [{ rotate: '2deg' }, { translateY: 4 }],
+        }} />
+        <View style={{
+          position: 'absolute', inset: 0,
+          borderRadius: 20,
+          backgroundColor: '#111117',
+          borderWidth: 1,
+          borderColor: 'rgba(147,197,253,0.25)',
+          overflow: 'hidden',
+          padding: 16,
+        }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <View>
+              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 18, letterSpacing: 1 }}>AAPL</Text>
+              <Text style={{ color: '#374151', fontSize: 11 }}>Apple Inc.</Text>
             </View>
-            <Text className="text-slate-400 text-xs leading-4 mb-3">
-              "Buyers are showing strong conviction. Momentum is building steadily."
-            </Text>
-            <View className="flex-row gap-2">
-              {[
-                { label: 'RSI', value: '68.4', color: 'text-emerald-400' },
-                { label: 'Trend', value: 'Strong', color: 'text-emerald-400' },
-                { label: 'Conf.', value: '82%', color: 'text-[#818CF8]' },
-              ].map((item) => (
-                <View key={item.label} className="flex-1 bg-white/5 rounded-xl p-2 border border-white/5">
-                  <Text className="text-slate-500 text-xs mb-0.5">{item.label}</Text>
-                  <Text className={`${item.color} text-sm font-bold`}>{item.value}</Text>
-                </View>
-              ))}
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 6,
+              backgroundColor: 'rgba(147,197,253,0.10)',
+              borderWidth: 1, borderColor: 'rgba(147,197,253,0.25)',
+              borderRadius: 100, paddingHorizontal: 10, paddingVertical: 4,
+            }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#93C5FD' }} />
+              <Text style={{ color: '#93C5FD', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>BULLISH</Text>
             </View>
+          </View>
+          <Text style={{ color: '#6B7280', fontSize: 11, lineHeight: 16, marginBottom: 12 }}>
+            "Buyers are showing strong conviction. Momentum building."
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[
+              { label: 'RSI', value: '68.4', color: '#93C5FD' },
+              { label: 'Trend', value: 'Strong', color: '#93C5FD' },
+              { label: 'Conf.', value: '82%', color: '#FDA4AF' },
+            ].map((item) => (
+              <View key={item.label} style={{
+                flex: 1, backgroundColor: 'rgba(255,255,255,0.03)',
+                borderRadius: 12, padding: 8,
+                borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
+              }}>
+                <Text style={{ color: '#374151', fontSize: 10, marginBottom: 2 }}>{item.label}</Text>
+                <Text style={{ color: item.color, fontSize: 13, fontWeight: '700' }}>{item.value}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </View>
@@ -109,11 +120,9 @@ function IntroVisual() {
   );
 }
 
-// ─── Mode Visual ─────────────────────────────────────────────────────────────
-
 function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode) => void }) {
   return (
-    <View className="w-full gap-3 py-2">
+    <View style={{ width: '100%', gap: 12, paddingVertical: 8 }}>
       {[
         {
           id: 'beginner' as Mode,
@@ -132,47 +141,38 @@ function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode
       ].map((option) => {
         const active = selected === option.id;
         return (
-          <TouchableOpacity
-            key={option.id}
-            onPress={() => onSelect(option.id)}
-            activeOpacity={0.85}
-          >
-            <View
-              className={`rounded-2xl border p-4 ${
-                active
-                  ? 'bg-[#4F46E5]/12 border-[#4F46E5]'
-                  : 'bg-white/4 border-white/8'
-              }`}
-            >
-              <View className="flex-row items-start gap-3">
-                <Text className="text-2xl mt-0.5">{option.emoji}</Text>
-                <View className="flex-1">
-                  <View className="flex-row items-center justify-between mb-1">
-                    <Text className="text-white font-bold text-base">{option.title}</Text>
-                    <View
-                      className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                        active ? 'bg-[#4F46E5] border-[#4F46E5]' : 'border-slate-600'
-                      }`}
-                    >
-                      {active && <Text className="text-white text-xs">✓</Text>}
+          <TouchableOpacity key={option.id} onPress={() => onSelect(option.id)} activeOpacity={0.85}>
+            <View style={{
+              borderRadius: 20, padding: 16,
+              backgroundColor: active ? 'rgba(147,197,253,0.06)' : 'rgba(255,255,255,0.02)',
+              borderWidth: 1,
+              borderColor: active ? 'rgba(147,197,253,0.35)' : 'rgba(255,255,255,0.06)',
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <Text style={{ fontSize: 22, marginTop: 2 }}>{option.emoji}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>{option.title}</Text>
+                    <View style={{
+                      width: 20, height: 20, borderRadius: 10,
+                      borderWidth: 2,
+                      borderColor: active ? '#93C5FD' : '#374151',
+                      backgroundColor: active ? '#93C5FD' : 'transparent',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {active && <Text style={{ color: '#09090F', fontSize: 11, fontWeight: '700' }}>✓</Text>}
                     </View>
                   </View>
-                  <Text className="text-slate-400 text-sm leading-5 mb-2">{option.desc}</Text>
-                  <View className="flex-row gap-1.5 flex-wrap">
+                  <Text style={{ color: '#6B7280', fontSize: 13, lineHeight: 18, marginBottom: 10 }}>{option.desc}</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
                     {option.tags.map((tag) => (
-                      <View
-                        key={tag}
-                        className={`rounded-full px-2 py-0.5 border ${
-                          active
-                            ? 'bg-[#4F46E5]/15 border-[#4F46E5]/40'
-                            : 'bg-white/5 border-white/10'
-                        }`}
-                      >
-                        <Text
-                          className={`text-xs ${active ? 'text-[#818CF8]' : 'text-slate-400'}`}
-                        >
-                          {tag}
-                        </Text>
+                      <View key={tag} style={{
+                        borderRadius: 100, paddingHorizontal: 8, paddingVertical: 3,
+                        backgroundColor: active ? 'rgba(147,197,253,0.10)' : 'rgba(255,255,255,0.04)',
+                        borderWidth: 1,
+                        borderColor: active ? 'rgba(147,197,253,0.30)' : 'rgba(255,255,255,0.08)',
+                      }}>
+                        <Text style={{ fontSize: 11, color: active ? '#93C5FD' : '#6B7280' }}>{tag}</Text>
                       </View>
                     ))}
                   </View>
@@ -186,44 +186,32 @@ function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode
   );
 }
 
-// ─── Watchlist Visual ─────────────────────────────────────────────────────────
-
-function WatchlistVisual({
-  selected,
-  onToggle,
-}: {
-  selected: string[];
-  onToggle: (symbol: string) => void;
-}) {
+function WatchlistVisual({ selected, onToggle }: { selected: string[]; onToggle: (s: string) => void }) {
   return (
-    <View className="w-full py-3">
-      <View className="flex-row flex-wrap gap-2 justify-center">
+    <View style={{ width: '100%', paddingVertical: 12 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
         {POPULAR_STOCKS.map((stock) => {
           const isSelected = selected.includes(stock.symbol);
           return (
-            <TouchableOpacity
-              key={stock.symbol}
-              onPress={() => onToggle(stock.symbol)}
-              activeOpacity={0.8}
-            >
-              <View
-                className={`rounded-xl border px-4 py-3 min-w-[100px] items-center ${
-                  isSelected
-                    ? 'bg-[#4F46E5]/20 border-[#4F46E5]'
-                    : 'bg-white/4 border-white/10'
-                }`}
-              >
-                <Text
-                  className={`font-bold text-sm tracking-wide ${
-                    isSelected ? 'text-[#818CF8]' : 'text-white'
-                  }`}
-                >
-                  {stock.symbol}
-                </Text>
-                <Text className="text-slate-500 text-xs mt-0.5">{stock.name}</Text>
+            <TouchableOpacity key={stock.symbol} onPress={() => onToggle(stock.symbol)} activeOpacity={0.8}>
+              <View style={{
+                borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
+                minWidth: 100, alignItems: 'center',
+                backgroundColor: isSelected ? 'rgba(147,197,253,0.08)' : 'rgba(255,255,255,0.02)',
+                borderWidth: 1,
+                borderColor: isSelected ? 'rgba(147,197,253,0.40)' : 'rgba(255,255,255,0.06)',
+              }}>
+                <Text style={{
+                  fontWeight: '700', fontSize: 13, letterSpacing: 0.5,
+                  color: isSelected ? '#93C5FD' : '#FFFFFF',
+                }}>{stock.symbol}</Text>
+                <Text style={{ color: '#374151', fontSize: 11, marginTop: 2 }}>{stock.name}</Text>
                 {isSelected && (
-                  <View className="mt-1.5 bg-[#4F46E5]/30 rounded-full px-2 py-0.5">
-                    <Text className="text-[#818CF8] text-xs">✓ added</Text>
+                  <View style={{
+                    marginTop: 6, backgroundColor: 'rgba(147,197,253,0.15)',
+                    borderRadius: 100, paddingHorizontal: 8, paddingVertical: 2,
+                  }}>
+                    <Text style={{ color: '#93C5FD', fontSize: 10 }}>✓ added</Text>
                   </View>
                 )}
               </View>
@@ -231,8 +219,7 @@ function WatchlistVisual({
           );
         })}
       </View>
-
-      <Text className="text-slate-600 text-xs text-center mt-4">
+      <Text style={{ color: '#374151', fontSize: 12, textAlign: 'center', marginTop: 16 }}>
         {selected.length === 0
           ? 'Tap any stock to add it to your watchlist'
           : `${selected.length} stock${selected.length > 1 ? 's' : ''} added`}
@@ -241,24 +228,20 @@ function WatchlistVisual({
   );
 }
 
-// ─── Dot Indicator ────────────────────────────────────────────────────────────
-
 function DotIndicator({ count, active }: { count: number; active: number }) {
   return (
-    <View className="flex-row gap-2 items-center justify-center">
+    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
       {Array.from({ length: count }).map((_, i) => (
-        <View
-          key={i}
-          className={`rounded-full ${
-            i === active ? 'w-6 h-2 bg-[#4F46E5]' : 'w-2 h-2 bg-slate-700'
-          }`}
-        />
+        <View key={i} style={{
+          borderRadius: 100,
+          width: i === active ? 24 : 6,
+          height: 6,
+          backgroundColor: i === active ? '#93C5FD' : '#1F2937',
+        }} />
       ))}
     </View>
   );
 }
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -267,14 +250,11 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedMode, setSelectedMode] = useState<Mode>('beginner');
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
-
   const flatListRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0) {
-        setCurrentIndex(viewableItems[0].index ?? 0);
-      }
+      if (viewableItems.length > 0) setCurrentIndex(viewableItems[0].index ?? 0);
     }
   ).current;
 
@@ -301,7 +281,6 @@ export default function OnboardingScreen() {
     );
   }
 
-  const isLastSlide = currentIndex === SLIDES.length - 1;
   const canProceed =
     currentIndex === 0 ||
     currentIndex === 1 ||
@@ -309,66 +288,60 @@ export default function OnboardingScreen() {
 
   function ctaLabel() {
     if (currentIndex === 0) return 'Get Started →';
-    if (currentIndex === 1)
-      return `Continue as ${selectedMode === 'beginner' ? 'Beginner' : 'Advanced'} →`;
-    if (selectedStocks.length > 0)
-      return `Open FinCue with ${selectedStocks.length} stock${selectedStocks.length > 1 ? 's' : ''} →`;
+    if (currentIndex === 1) return `Continue as ${selectedMode === 'beginner' ? 'Beginner' : 'Advanced'} →`;
+    if (selectedStocks.length > 0) return `Open FinCue with ${selectedStocks.length} stock${selectedStocks.length > 1 ? 's' : ''} →`;
     return 'Select at least one stock';
   }
 
-  function renderSlide({ item }: { item: (typeof SLIDES)[0] }) {
+  function renderSlide({ item }: { item: typeof SLIDES[0] }) {
     return (
-      <View style={{ width }} className="flex-1 px-6 pt-2">
-        {/* Tag pill */}
-        <View className="self-start bg-[#4F46E5]/15 border border-[#4F46E5]/40 rounded-full px-3 py-1 mb-5">
-          <Text className="text-[#818CF8] text-xs font-bold tracking-widest">{item.tag}</Text>
+      <View style={{ width, flex: 1, paddingHorizontal: 24, paddingTop: 8 }}>
+        <View style={{
+          alignSelf: 'flex-start',
+          backgroundColor: 'rgba(147,197,253,0.08)',
+          borderWidth: 1, borderColor: 'rgba(147,197,253,0.20)',
+          borderRadius: 100, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 20,
+        }}>
+          <Text style={{ color: '#93C5FD', fontSize: 10, fontWeight: '700', letterSpacing: 2 }}>{item.tag}</Text>
         </View>
-
-        {/* Headline */}
-        <Text className="text-white text-4xl font-bold leading-tight mb-3">
+        <Text style={{ color: '#FFFFFF', fontSize: 38, fontWeight: '700', lineHeight: 44, marginBottom: 12 }}>
           {item.headline}
         </Text>
-
-        {/* Body */}
-        <Text className="text-slate-400 text-base leading-6 mb-4">{item.body}</Text>
-
-        {/* Per-slide visual */}
+        <Text style={{ color: '#6B7280', fontSize: 15, lineHeight: 22, marginBottom: 16 }}>{item.body}</Text>
         {item.visual === 'intro' && <IntroVisual />}
-        {item.visual === 'mode' && (
-          <ModeVisual selected={selectedMode} onSelect={setSelectedMode} />
-        )}
-        {item.visual === 'watchlist' && (
-          <WatchlistVisual selected={selectedStocks} onToggle={toggleStock} />
-        )}
+        {item.visual === 'mode' && <ModeVisual selected={selectedMode} onSelect={setSelectedMode} />}
+        {item.visual === 'watchlist' && <WatchlistVisual selected={selectedStocks} onToggle={toggleStock} />}
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#080D17]">
+    <View style={{ flex: 1, backgroundColor: '#09090F' }}>
       <StatusBar barStyle="light-content" />
 
-      {/* Ambient glow — top left */}
-      <View
-        className="absolute w-72 h-72 rounded-full bg-[#4F46E5]/10"
-        style={{ top: -80, left: -80 }}
-        pointerEvents="none"
-      />
+      {/* Ambient glow */}
+      <View style={{
+        position: 'absolute', width: 300, height: 300, borderRadius: 150,
+        backgroundColor: 'rgba(147,197,253,0.04)', top: -100, left: -100,
+      }} pointerEvents="none" />
+      <View style={{
+        position: 'absolute', width: 200, height: 200, borderRadius: 100,
+        backgroundColor: 'rgba(253,164,175,0.04)', bottom: 100, right: -60,
+      }} pointerEvents="none" />
 
       {/* Wordmark */}
-      <View className="absolute top-14 left-6 z-10">
-        <Text className="text-white font-bold text-xl tracking-tight">
-          Fin<Text className="text-[#4F46E5]">Cue</Text>
+      <View style={{ position: 'absolute', top: 56, left: 24, zIndex: 10 }}>
+        <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 20, letterSpacing: -0.5 }}>
+          Fin<Text style={{ color: '#93C5FD' }}>Cue</Text>
         </Text>
       </View>
 
       {/* Skip */}
       <TouchableOpacity
         onPress={handleFinish}
-        activeOpacity={0.7}
-        className="absolute top-14 right-6 z-10 py-2 px-3"
+        style={{ position: 'absolute', top: 56, right: 24, zIndex: 10, paddingHorizontal: 12, paddingVertical: 8 }}
       >
-        <Text className="text-slate-600 text-sm">Skip</Text>
+        <Text style={{ color: '#374151', fontSize: 13 }}>Skip</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -384,32 +357,32 @@ export default function OnboardingScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         contentContainerStyle={{ paddingTop: 88 }}
-        className="flex-1"
+        style={{ flex: 1 }}
       />
 
       {/* Bottom bar */}
-      <View className="px-6 pb-12 pt-4 gap-4">
+      <View style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 16, gap: 16 }}>
         <DotIndicator count={SLIDES.length} active={currentIndex} />
-
         <TouchableOpacity
           onPress={goNext}
           disabled={!canProceed}
           activeOpacity={0.85}
-          className={`rounded-2xl py-4 items-center border ${
-            canProceed
-              ? 'bg-[#4F46E5] border-[#4F46E5]'
-              : 'bg-[#4F46E5]/20 border-[#4F46E5]/30'
-          }`}
+          style={{
+            borderRadius: 16, paddingVertical: 16, alignItems: 'center',
+            backgroundColor: canProceed ? '#93C5FD' : 'rgba(147,197,253,0.12)',
+            borderWidth: 1,
+            borderColor: canProceed ? '#93C5FD' : 'rgba(147,197,253,0.20)',
+          }}
         >
-          <Text
-            className={`font-bold text-base ${canProceed ? 'text-white' : 'text-[#4F46E5]/60'}`}
-          >
+          <Text style={{
+            fontWeight: '700', fontSize: 15,
+            color: canProceed ? '#09090F' : 'rgba(147,197,253,0.40)',
+          }}>
             {ctaLabel()}
           </Text>
         </TouchableOpacity>
-
-        {isLastSlide && (
-          <Text className="text-slate-700 text-xs text-center leading-4">
+        {currentIndex === SLIDES.length - 1 && (
+          <Text style={{ color: '#1F2937', fontSize: 11, textAlign: 'center', lineHeight: 16 }}>
             FinCue provides analysis and education only. Not financial advice.
           </Text>
         )}
