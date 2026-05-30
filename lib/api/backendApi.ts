@@ -46,7 +46,7 @@ export async function fetchAnalysis(symbol: string): Promise<AnalysisResult> {
     return cached.data;
   }
 
-  const url = `${API_CONFIG.BACKEND_URL}/api/v1/analysis/${key}`;
+  const url = `${API_CONFIG.BACKEND_URL}/analysis/${key}`;
   const res = await fetch(url, {
   headers: {
     "Content-Type": "application/json",
