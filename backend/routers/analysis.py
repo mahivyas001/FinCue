@@ -1,50 +1,20 @@
+# backend/routers/analysis.py
+
 from fastapi import APIRouter, HTTPException
-from services.quote import fetch_daily_ohlcv, fetch_current_quote, _get_cached, _set_cached
-from services.indicators import compute_indicators, compute_signal
-from models.analysis import AnalysisResponse
+from services.analysis import analyze
+from models.schemas import AnalysisResponse
+import logging
 
-router = APIRouter(prefix="/api/v1")
+logger    = logging.getLogger(__name__)
+router    = APIRouter(prefix="/analysis", tags=["analysis"])
 
-@router.get("/analysis/{symbol}", response_model=AnalysisResponse)
-async def get_analysis(symbol: str):
-    symbol = symbol.upper().strip()
-
-    # Check full analysis cache first
-    cache_key = f"analysis_{symbol}"
-    cached = _get_cached(cache_key)
-    if cached is not None:
-        return cached
-
+@router.get("/{symbol}", response_model=AnalysisResponse)
+def get_analysis(symbol: str):
     try:
-        df = await fetch_daily_ohlcv(symbol)
-        quote = await fetch_current_quote(symbol)
-    except ValueError as e:
-        if "RATE_LIMIT" in str(e):
-            raise HTTPException(status_code=429, detail="Alpha Vantage rate limit reached")
-        raise HTTPException(status_code=404, detail=str(e))
+        symbol = symbol.upper().strip()
+        return analyze(symbol)
+    except RuntimeError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fetch error: {str(e)}")
-
-    if len(df) < 50:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Not enough data for {symbol} (need 50 days, got {len(df)})"
-        )
-
-    try:
-        indicators = compute_indicators(df)
-        signal, confidence = compute_signal(indicators, indicators.rsi)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Indicator error: {str(e)}")
-
-    response = AnalysisResponse(
-        symbol=symbol,
-        signal=signal,
-        confidence=confidence,
-        indicators=indicators,
-        price=quote["price"],
-        change_percent=quote["change_percent"],
-    )
-
-    _set_cached(cache_key, response)
-    return response
+        logger.error(f"Analysis failed for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail="Analysis failed.")
