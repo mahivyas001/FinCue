@@ -6,8 +6,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Star, RefreshCw, AlertCircle } from 'lucide-react-native';
-import { Colors, signalColor, signalTint } from '@/constants/colors';
-import { Signal } from '@/types/stock';
+import { COLORS, SignalType, getSignalColor, getSignalTint } from '@/constants/colors';
+import { FONTS, FONT_SIZE } from '@/constants/fonts';
 import SignalBadge from '@/components/ui/SignalBadge';
 import AIInsightCard from '@/components/ui/AIInsightCard';
 import IndicatorRow from '@/components/stock/IndicatorRow';
@@ -22,43 +22,29 @@ export default function StockDetailScreen() {
   const symbol = params.symbol as string;
   const router = useRouter();
 
-  const mode = useAppStore(s => s.mode);
+  const mode     = useAppStore(s => s.mode);
   const watchlist = useAppStore(s => s.watchlist);
   const isAdvanced = mode === 'advanced';
 
   const stockMeta = MOCK_STOCKS.find((s) => s.symbol === symbol);
 
-  const {
-    stock,
-    isLoading: quoteLoading,
-    refresh: refreshQuote,
-  } = useStockQuote(symbol ?? '');
-
-  const {
-    analysis,
-    isLoading: analysisLoading,
-    error: analysisError,
-    refresh: refreshAnalysis,
-  } = useAnalysis(symbol ?? '');
+  const { stock, isLoading: quoteLoading, refresh: refreshQuote } = useStockQuote(symbol ?? '');
+  const { analysis, isLoading: analysisLoading, error: analysisError, refresh: refreshAnalysis } = useAnalysis(symbol ?? '');
 
   const explanationMode = isAdvanced ? 'advanced' : 'beginner';
-  const {
-    data: explanationData,
-    loading: explanationLoading,
-    error: explanationError,
-  } = useExplanation(symbol ?? '', explanationMode);
+  const { data: explanationData, loading: explanationLoading, error: explanationError } = useExplanation(symbol ?? '', explanationMode);
 
-  const isSaved = watchlist.includes(symbol ?? '');
+  const isSaved   = watchlist.includes(symbol ?? '');
   const isLoading = quoteLoading || analysisLoading;
 
   const price     = stock?.price         ?? stockMeta?.price         ?? 0;
   const change    = stock?.change        ?? stockMeta?.change        ?? 0;
   const changePct = stock?.changePercent ?? stockMeta?.changePercent ?? 0;
-  const currency  = (stockMeta?.market === 'IN') ? '₹' : '$';
+  const currency  = stockMeta?.market === 'IN' ? '₹' : '$';
   const isPos     = change >= 0;
 
-  const signal: Signal = (analysis?.signal ?? 'neutral') as Signal;
-  const confidence     = analysis?.confidence ?? 0;
+  const signal: SignalType = (analysis?.signal ?? 'neutral') as SignalType;
+  const confidence         = analysis?.confidence ?? 0;
 
   const rsi        = analysis?.indicators?.rsi            ?? null;
   const macdSignal = analysis?.indicators?.macd_signal    ?? '—';
@@ -66,35 +52,29 @@ export default function StockDetailScreen() {
   const volLabel   = analysis?.indicators?.volume_level   ?? '—';
   const trendLabel = analysis?.indicators?.trend_strength ?? '—';
 
-  const beginnerTriggers = [
-    'Price momentum is building',
-    `Currently ${maVsLabel.toLowerCase()} 50-day average`,
-    `Volume is ${volLabel.toLowerCase()}`,
-  ];
-  const advancedTriggers = [
-    `RSI ${rsi?.toFixed(1) ?? '—'} — ${(rsi ?? 50) > 70 ? 'approaching overbought' : (rsi ?? 50) < 30 ? 'oversold territory' : 'mid-range'}`,
-    `MACD: ${macdSignal}`,
-    `MA50: ${maVsLabel} · Trend: ${trendLabel}`,
-  ];
-
   const explanationText = explanationLoading
     ? 'Generating AI insight...'
     : explanationError
     ? isAdvanced
-      ? `RSI at ${rsi?.toFixed(1) ?? '—'} — MACD ${macdSignal.toLowerCase()} — ${maVsLabel} MA50 — ${trendLabel} trend.`
+      ? `RSI at ${rsi?.toFixed(1) ?? '—'} · MACD ${macdSignal} · ${maVsLabel} MA50 · ${trendLabel} trend.`
       : signal === 'bullish'
-      ? "Buyers have been pushing this stock up steadily. Positive momentum detected."
+      ? 'Buyers have been pushing this stock up steadily. Positive momentum detected.'
       : signal === 'bearish'
-      ? "Selling pressure has been building. Indicators suggest caution."
-      : "No strong direction yet — the stock is in a wait-and-see zone."
+      ? 'Selling pressure has been building. Indicators suggest caution.'
+      : 'No strong direction yet — the stock is in a wait-and-see zone.'
     : explanationData?.explanation ?? '';
 
+  const watchForText = isAdvanced
+    ? `MA50: ${maVsLabel} · Trend: ${trendLabel} · Volume: ${volLabel}`
+    : signal === 'bullish'
+    ? 'Watch for volume increasing to confirm the move'
+    : signal === 'bearish'
+    ? 'Watch for price stabilizing before considering entry'
+    : 'Wait for a clear signal before taking action';
+
   const handleToggleWatchlist = () => {
-    if (isSaved) {
-      useAppStore.getState().removeFromWatchlist(symbol ?? '');
-    } else {
-      useAppStore.getState().addToWatchlist(symbol ?? '');
-    }
+    const { addToWatchlist, removeFromWatchlist } = useAppStore.getState();
+    isSaved ? removeFromWatchlist(symbol ?? '') : addToWatchlist(symbol ?? '');
   };
 
   const handleRefresh = () => {
@@ -115,16 +95,17 @@ export default function StockDetailScreen() {
 
   return (
     <View style={styles.screen}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-          <ChevronLeft size={20} color={Colors.text.primary} />
+          <ChevronLeft size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{stockMeta?.name ?? symbol}</Text>
         <TouchableOpacity style={styles.iconBtn} onPress={handleToggleWatchlist}>
           <Star
             size={18}
-            color={isSaved ? Colors.bullish.primary : Colors.text.faint}
-            fill={isSaved ? Colors.bullish.primary : 'transparent'}
+            color={isSaved ? COLORS.bullish : COLORS.textMuted}
+            fill={isSaved ? COLORS.bullish : 'transparent'}
           />
         </TouchableOpacity>
       </View>
@@ -136,10 +117,11 @@ export default function StockDetailScreen() {
           <RefreshControl
             refreshing={isLoading}
             onRefresh={handleRefresh}
-            tintColor={Colors.bullish.primary}
+            tintColor={COLORS.bullish}
           />
         }
       >
+        {/* Price hero */}
         <View style={styles.priceHero}>
           <Text style={styles.symbolLabel}>
             {symbol} · {stockMeta?.market === 'IN' ? 'NSE' : 'NASDAQ'}
@@ -150,45 +132,54 @@ export default function StockDetailScreen() {
               maximumFractionDigits: 2,
             })}
           </Text>
-          <View style={[styles.changePill, { backgroundColor: signalTint(signal) }]}>
-            {!quoteLoading && <View style={styles.liveDot} />}
+          <View style={[styles.changePill, { backgroundColor: getSignalTint(signal) }]}>
+            {!quoteLoading && <View style={[styles.liveDot, { backgroundColor: getSignalColor(signal) }]} />}
             {quoteLoading ? (
-              <ActivityIndicator size="small" color={signalColor(signal)} />
+              <ActivityIndicator size="small" color={getSignalColor(signal)} />
             ) : (
-              <Text style={[styles.changePillText, { color: signalColor(signal) }]}>
+              <Text style={[styles.changePillText, { color: getSignalColor(signal) }]}>
                 {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePct.toFixed(2)}%) Today
               </Text>
             )}
           </View>
         </View>
 
+        {/* Signal + refresh */}
         <View style={styles.signalRow}>
           <SignalBadge signal={signal} confidence={confidence} size="md" />
-          <TouchableOpacity
-            style={styles.refreshBtn}
-            onPress={handleRefresh}
-            disabled={isLoading}
-          >
+          <TouchableOpacity style={styles.refreshBtn} onPress={handleRefresh} disabled={isLoading}>
             {isLoading
-              ? <ActivityIndicator size="small" color={Colors.text.faint} />
-              : <RefreshCw size={14} color={Colors.text.faint} />
+              ? <ActivityIndicator size="small" color={COLORS.textMuted} />
+              : <RefreshCw size={14} color={COLORS.textMuted} />
             }
           </TouchableOpacity>
         </View>
 
+        {/* Error banner */}
         {analysisError && (
           <View style={styles.errorBanner}>
-            <AlertCircle size={14} color={Colors.bearish.primary} />
-            <Text style={styles.errorText}>
-              {analysisError} — showing cached data
-            </Text>
+            <AlertCircle size={14} color={COLORS.bearish} />
+            <Text style={styles.errorText}>{analysisError} — showing cached data</Text>
           </View>
         )}
 
+        {/* ── AI Insight — FIRST AND PRIMARY ── */}
+        <View style={styles.section}>
+          <AIInsightCard
+            signal={signal}
+            confidence={confidence}
+            explanation={explanationText}
+            mode={isAdvanced ? 'advanced' : 'beginner'}
+            watchFor={watchForText}
+          />
+        </View>
+
+        {/* Chart */}
         <View style={styles.section}>
           <ChartContainer symbol={symbol ?? ''} signal={signal} />
         </View>
 
+        {/* Technical indicators */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Technical Signals</Text>
           {analysisLoading ? (
@@ -199,47 +190,16 @@ export default function StockDetailScreen() {
             </View>
           ) : (
             <>
-              <IndicatorRow
-                label="RSI (14)"
-                value={rsi !== null ? rsi : '—'}
-                barPct={rsi !== null ? Math.min(100, Math.max(0, rsi)) : 50}
-              />
-              <IndicatorRow
-                label="MACD"
-                value={macdSignal}
-                barPct={macdSignal === 'Bullish' ? 65 : macdSignal === 'Bearish' ? 35 : 50}
-              />
-              <IndicatorRow
-                label="vs MA 50"
-                value={maVsLabel}
-                barPct={maVsLabel === 'Above' ? 70 : maVsLabel === 'Below' ? 30 : 50}
-              />
-              <IndicatorRow
-                label="Volume"
-                value={volLabel}
-                barPct={volLabel === 'High' ? 80 : volLabel === 'Normal' ? 50 : 25}
-              />
-              <IndicatorRow
-                label="Trend Strength"
-                value={trendLabel}
-                barPct={trendLabel === 'Strong' ? 85 : trendLabel === 'Moderate' ? 52 : 25}
-                isLast
-              />
+              <IndicatorRow label="RSI (14)"       value={rsi !== null ? rsi : '—'}  signal={rsi !== null ? (rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : 'neutral') : 'neutral'} />
+              <IndicatorRow label="MACD"            value={macdSignal}                signal={macdSignal === 'Bullish' ? 'bullish' : macdSignal === 'Bearish' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="vs MA 50"        value={maVsLabel}                 signal={maVsLabel === 'Above' ? 'bullish' : maVsLabel === 'Below' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="Volume"          value={volLabel}                  signal={volLabel === 'High' ? 'bullish' : volLabel === 'Low' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="Trend Strength"  value={trendLabel}                signal={trendLabel === 'Strong' ? 'bullish' : trendLabel === 'Weak' ? 'bearish' : 'neutral'} divider={false} />
             </>
           )}
         </View>
 
-        <View style={styles.section}>
-          <AIInsightCard
-            signal={signal}
-            confidence={confidence}
-            explanation={explanationText}
-            triggers={isAdvanced ? advancedTriggers : beginnerTriggers}
-            isBeginnerMode={!isAdvanced}
-            isLoading={analysisLoading || explanationLoading}
-          />
-        </View>
-
+        {/* Historical context */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Historical Context</Text>
           <Text style={styles.historicalText}>
@@ -247,10 +207,8 @@ export default function StockDetailScreen() {
             continued higher, others reversed. Past patterns are not a predictor of future results.
           </Text>
           <View style={styles.disclaimerRow}>
-            <AlertCircle size={11} color={Colors.text.faint} />
-            <Text style={styles.disclaimerText}>
-              Historical context only — not a prediction
-            </Text>
+            <AlertCircle size={11} color={COLORS.textFaint} />
+            <Text style={styles.disclaimerText}>Historical context only — not a prediction</Text>
           </View>
         </View>
 
@@ -261,31 +219,31 @@ export default function StockDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:         { flex: 1, backgroundColor: Colors.bg.base },
+  screen:         { flex: 1, backgroundColor: COLORS.bg },
   header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
-  iconBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:    { fontSize: 14, color: Colors.text.muted, letterSpacing: 0.05 },
+  iconBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
+  headerTitle:    { fontSize: FONT_SIZE.sm, fontFamily: FONTS.medium, color: COLORS.textSub, letterSpacing: 0.05 },
   content:        { paddingHorizontal: 20, paddingTop: 8 },
   priceHero:      { alignItems: 'center', paddingTop: 16, paddingBottom: 12 },
-  symbolLabel:    { fontSize: 12, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 6 },
-  priceNumber:    { fontSize: 52, fontWeight: '600', color: Colors.text.primary, letterSpacing: -2, lineHeight: 56 },
-  changePill:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 14, borderRadius: 100, marginTop: 10, minHeight: 30 },
-  liveDot:        { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.bullish.primary },
-  changePillText: { fontSize: 13, fontWeight: '500' },
+  symbolLabel:    { fontSize: FONT_SIZE.xs, fontFamily: FONTS.semiBold, color: COLORS.textFaint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
+  priceNumber:    { fontSize: FONT_SIZE.hero, fontFamily: FONTS.bold, color: COLORS.textPrimary, letterSpacing: -2, lineHeight: 56 },
+  changePill:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 14, borderRadius: 100, marginTop: 10, minHeight: 32 },
+  liveDot:        { width: 6, height: 6, borderRadius: 3 },
+  changePillText: { fontSize: FONT_SIZE.sm, fontFamily: FONTS.semiBold },
   signalRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.bg.card, alignItems: 'center', justifyContent: 'center' },
-  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.bearish.tint, borderRadius: 10, padding: 10, marginBottom: 12 },
-  errorText:      { fontSize: 12, color: Colors.bearish.primary, flex: 1 },
+  refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
+  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.bearishBg, borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bearishBorder },
+  errorText:      { fontSize: FONT_SIZE.xs, fontFamily: FONTS.medium, color: COLORS.bearish, flex: 1 },
   section:        { marginBottom: 14 },
-  card:           { backgroundColor: Colors.bg.card, borderRadius: 16, padding: 16, marginBottom: 14 },
-  sectionLabel:   { fontSize: 10, color: Colors.text.faint, letterSpacing: 0.1, textTransform: 'uppercase', marginBottom: 12 },
-  historicalText: { fontSize: 13, color: Colors.text.muted, lineHeight: 20, marginBottom: 10 },
+  card:           { backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border },
+  sectionLabel:   { fontSize: FONT_SIZE.xs, fontFamily: FONTS.bold, color: COLORS.textFaint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+  historicalText: { fontSize: FONT_SIZE.sm, fontFamily: FONTS.regular, color: COLORS.textSub, lineHeight: 22, marginBottom: 10 },
   disclaimerRow:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  disclaimerText: { fontSize: 11, color: Colors.text.faint },
+  disclaimerText: { fontSize: FONT_SIZE.xs, fontFamily: FONTS.regular, color: COLORS.textFaint },
   shimmerGroup:   { gap: 12 },
-  shimmer:        { height: 12, borderRadius: 6, backgroundColor: Colors.bg.elevated },
-  notFound:       { flex: 1, backgroundColor: Colors.bg.base, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText:   { fontSize: 14, color: Colors.text.muted },
-  backBtn:        { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.bg.card, borderRadius: 10 },
-  backBtnText:    { fontSize: 13, color: Colors.bullish.primary },
+  shimmer:        { height: 12, borderRadius: 6, backgroundColor: COLORS.bgElevated },
+  notFound:       { flex: 1, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  notFoundText:   { fontSize: FONT_SIZE.sm, fontFamily: FONTS.medium, color: COLORS.textSub },
+  backBtn:        { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.bgCard, borderRadius: 10 },
+  backBtnText:    { fontSize: FONT_SIZE.sm, fontFamily: FONTS.semiBold, color: COLORS.bullish },
 });

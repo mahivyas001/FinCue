@@ -1,84 +1,91 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ActivityIndicator, StyleSheet,
 } from 'react-native';
-import { Colors, signalColor } from '@/constants/colors';
-import { Signal } from '@/types/stock';
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
 import { useStockChart } from '@/hooks/useStockChart';
+import { Colors, Signal, signalColor as getSignalColor } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
-const TIMEFRAMES = ['1W', '1M', '3M'] as const;
-type TimeFrame = typeof TIMEFRAMES[number];
+type Timeframe = '1W' | '1M' | '3M';
 
 interface ChartContainerProps {
   symbol: string;
   signal?: Signal;
 }
 
-export default function ChartContainer({ symbol, signal = 'neutral' }: ChartContainerProps) {
-  const { mode } = useAppStore();
-  const isAdvanced = mode === 'advanced';
-  const color = signalColor(signal);
+export default function ChartContainer({
+  symbol,
+  signal = 'neutral',
+}: ChartContainerProps) {
+  const { mode }    = useAppStore();
+  const [tf, setTf] = useState<Timeframe>('1M');
 
-  const [timeframe, setTimeframe] = React.useState<TimeFrame>('1W');
-  const { data, isLoading, error, refresh } = useStockChart(symbol, timeframe);
+  const { data, isLoading, error, refresh } = useStockChart(symbol, tf);
+  const color = getSignalColor(signal);
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={color} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity
+          onPress={refresh}
+          style={[styles.retryBtn, { borderColor: color }]}
+        >
+          <Text style={[styles.retryText, { color }]}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.wrap}>
-      {/* Timeframe pills */}
-      <View style={styles.tabs}>
-        {TIMEFRAMES.map((tf) => {
-          const active = tf === timeframe;
+    <View style={styles.container}>
+      <View style={styles.tabRow}>
+        {(['1W', '1M', '3M'] as Timeframe[]).map((t) => {
+          const active = tf === t;
           return (
             <TouchableOpacity
-              key={tf}
+              key={t}
+              onPress={() => setTf(t)}
               style={[
                 styles.tab,
-                active && { backgroundColor: color },
+                active && { backgroundColor: color + '20', borderColor: color },
               ]}
-              onPress={() => setTimeframe(tf)}
-              activeOpacity={0.75}
             >
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                {tf}
-              </Text>
+              <Text style={[styles.tabText, active && { color }]}>{t}</Text>
             </TouchableOpacity>
           );
         })}
+        <View style={styles.modeTag}>
+          <Text style={styles.modeText}>
+            {mode === 'beginner' ? 'LINE' : 'CANDLE'}
+          </Text>
+        </View>
       </View>
 
-      {/* Chart area */}
-      <View style={styles.chartArea}>
-        {isLoading ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={color} size="small" />
-          </View>
-        ) : error ? (
-          <View style={styles.loader}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={refresh} style={styles.retryBtn}>
-              <Text style={[styles.retryText, { color }]}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : isAdvanced ? (
-          <CandlestickChart data={data} height={200} />
-        ) : (
-          <LineChart data={data} height={160} signal={signal} />
-        )}
-      </View>
+      {mode === 'beginner'
+        ? <LineChart data={data} signal={signal} />
+        : <CandlestickChart data={data} />
+      }
 
-      {/* Advanced legend */}
-      {isAdvanced && !isLoading && !error && (
+      {mode === 'advanced' && (
         <View style={styles.legend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
-            <Text style={styles.legendLabel}>Up candle</Text>
+            <Text style={styles.legendText}>Bullish</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: Colors.bearish.primary }]} />
-            <Text style={styles.legendLabel}>Down candle</Text>
+            <Text style={styles.legendText}>Bearish</Text>
           </View>
         </View>
       )}
@@ -87,71 +94,79 @@ export default function ChartContainer({ symbol, signal = 'neutral' }: ChartCont
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: Colors.bg.card,
-    borderRadius:    16,
-    padding:         14,
-    marginBottom:    14,
+  container: { gap: 8 },
+  center: {
+    height:         180,
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            12,
   },
-  tabs: {
+  errorText: {
+    fontSize:   12,
+    color:      Colors.text.muted,
+    textAlign:  'center',
+    fontFamily: 'Montserrat_400Regular',
+  },
+  retryBtn: {
+    borderWidth:       1,
+    borderRadius:      8,
+    paddingHorizontal: 16,
+    paddingVertical:   8,
+  },
+  retryText: {
+    fontSize:   13,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  tabRow: {
     flexDirection: 'row',
-    gap:           6,
-    marginBottom:  14,
+    gap:           8,
+    alignItems:    'center',
   },
   tab: {
     paddingHorizontal: 14,
-    paddingVertical:    5,
-    borderRadius:      100,
-    backgroundColor:   Colors.bg.elevated,
-  },
-  tabLabel: {
-    fontSize:   12,
-    fontWeight: '500',
-    color:      Colors.text.dim,
-  },
-  tabLabelActive: {
-    color: '#111111',
-  },
-  chartArea: {
-    minHeight: 120,
-  },
-  loader: {
-    height:         160,
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            8,
-  },
-  errorText: {
-    fontSize:  12,
-    color:     Colors.text.faint,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    paddingHorizontal: 14,
-    paddingVertical:    6,
-    backgroundColor:   Colors.bg.elevated,
+    paddingVertical:   6,
     borderRadius:      8,
+    borderWidth:       1,
+    borderColor:       Colors.border.default,
+    backgroundColor:   Colors.bg.elevated,
   },
-  retryText: {
-    fontSize: 12,
+  tabText: {
+    fontSize:      11,
+    color:         Colors.text.muted,
+    letterSpacing: 0.8,
+    fontFamily:    'Montserrat_600SemiBold',
+  },
+  modeTag: {
+    marginLeft:        'auto',
+    backgroundColor:   Colors.bg.elevated,
+    borderRadius:      6,
+    paddingHorizontal: 10,
+    paddingVertical:   4,
+  },
+  modeText: {
+    fontSize:      10,
+    color:         Colors.text.muted,
+    letterSpacing: 1.2,
+    fontFamily:    'Montserrat_700Bold',
   },
   legend: {
     flexDirection: 'row',
     gap:           16,
-    marginTop:     10,
+    paddingTop:    4,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           5,
+    gap:           6,
   },
   legendDot: {
-    width:        6,
-    height:       6,
-    borderRadius: 3,
+    width:        8,
+    height:       8,
+    borderRadius: 4,
   },
-  legendLabel: {
-    fontSize: 11,
-    color:    Colors.text.faint,
+  legendText: {
+    fontSize:   11,
+    color:      Colors.text.muted,
+    fontFamily: 'Montserrat_400Regular',
   },
 });

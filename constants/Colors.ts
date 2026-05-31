@@ -1,19 +1,21 @@
+// constants/colors.ts
+
 export const Colors = {
   primary: {
-    main:  '#93C5FD',
-    light: '#BFDBFE',
-    dark:  '#60A5FA',
-    tint:  'rgba(147, 197, 253, 0.10)',
+    main:  '#A2E0FC',
+    light: '#C8EDFD',
+    dark:  '#7DD3F8',
+    tint:  'rgba(162, 224, 252, 0.10)',
   },
   bullish: {
-    primary: '#93C5FD',
-    tint:    'rgba(147, 197, 253, 0.10)',
-    text:    '#BFDBFE',
+    primary: '#A2E0FC',
+    tint:    'rgba(162, 224, 252, 0.10)',
+    text:    '#C8EDFD',
   },
   bearish: {
-    primary: '#FDA4AF',
-    tint:    'rgba(253, 164, 175, 0.10)',
-    text:    '#FECDD3',
+    primary: '#FB7185',
+    tint:    'rgba(251, 113, 133, 0.10)',
+    text:    '#FCA5A5',
   },
   neutral: {
     primary: '#6B7280',
@@ -21,35 +23,25 @@ export const Colors = {
     text:    '#9CA3AF',
   },
   bg: {
-    base:     '#09090F',
-    card:     '#111117',
-    elevated: '#18181F',
-    overlay:  'rgba(9, 9, 15, 0.97)',
+    base:     '#0A0A0A',
+    card:     '#111111',
+    elevated: '#1A1A1A',
+    overlay:  'rgba(10, 10, 10, 0.97)',
   },
   text: {
     primary: '#FFFFFF',
-    muted:   '#6B7280',
-    faint:   '#374151',
+    muted:   '#AAAAAA',
+    faint:   '#555555',
   },
   border: {
     default: 'rgba(255, 255, 255, 0.06)',
     muted:   'rgba(255, 255, 255, 0.03)',
   },
   chart: {
-    bullish: '#60A5FA',
-    bearish: '#F472B6',
+    bullish: '#A2E0FC',
+    bearish: '#FB7185',
     neutral: '#6B7280',
     grid:    'rgba(255, 255, 255, 0.04)',
-  },
-  pink: {
-    primary: '#FDA4AF',
-    light:   '#FECDD3',
-    tint:    'rgba(253, 164, 175, 0.10)',
-  },
-  blue: {
-    primary: '#93C5FD',
-    light:   '#BFDBFE',
-    tint:    'rgba(147, 197, 253, 0.10)',
   },
 };
 

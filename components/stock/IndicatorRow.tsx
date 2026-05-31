@@ -1,93 +1,58 @@
+// components/stock/IndicatorRow.tsx
+// Fixed: Colors → COLORS, removed valueColor import (doesn't exist)
+
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, valueColor } from '@/constants/colors';
+import { COLORS, SignalType, getSignalColor } from '@/constants/colors';
+import { FONTS, FONT_SIZE } from '@/constants/fonts';
 
 interface IndicatorRowProps {
-  label:   string;
-  value:   string | number;
-  barPct?: number;
-  isLast?: boolean;
+  label:     string;
+  value:     string | number;
+  signal?:   SignalType;   // optional — colors the value if provided
+  divider?:  boolean;
 }
 
 export default function IndicatorRow({
   label,
   value,
-  barPct,
-  isLast = false,
+  signal,
+  divider = true,
 }: IndicatorRowProps) {
-  const numericVal   = typeof value === 'number' ? value : null;
-  const color        = valueColor(numericVal);
-  const displayValue = typeof value === 'number'
-    ? (value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1))
-    : value;
-
-  const barColor = numericVal === null
-    ? Colors.neutral.primary
-    : numericVal > 0
-      ? Colors.bullish.primary
-      : numericVal < 0
-        ? Colors.bearish.primary
-        : Colors.neutral.primary;
+  const valueColor = signal ? getSignalColor(signal) : COLORS.textPrimary;
 
   return (
-    <View style={[styles.row, !isLast && styles.rowBorder]}>
-      <Text style={styles.label}>{label}</Text>
-
-      <View style={styles.right}>
-        {barPct !== undefined && (
-          <View style={styles.barTrack}>
-            <View
-              style={[
-                styles.barFill,
-                {
-                  width: `${Math.min(100, Math.max(0, barPct))}%` as any,
-                  backgroundColor: barColor,
-                },
-              ]}
-            />
-          </View>
-        )}
-        <Text style={[styles.value, { color }]}>{displayValue}</Text>
+    <>
+      <View style={styles.row}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.value, { color: valueColor }]}>
+          {typeof value === 'number' ? value.toFixed(2) : value}
+        </Text>
       </View>
-    </View>
+      {divider && <View style={styles.divider} />}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'space-between',
-    paddingVertical: 11,
-  },
-  rowBorder: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border.default, // ← was Colors.border (object, not string)
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+    paddingVertical: 12,
   },
   label: {
-    fontSize: 13,
-    color:    Colors.text.muted,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           10,
-  },
-  barTrack: {
-    width:           52,
-    height:          3,
-    backgroundColor: Colors.bg.elevated,
-    borderRadius:    2,
-    overflow:        'hidden',
-  },
-  barFill: {
-    height:       3,
-    borderRadius: 2,
+    fontFamily: FONTS.medium,
+    fontSize:   FONT_SIZE.sm,
+    color:      COLORS.textSub,
   },
   value: {
-    fontSize:   14,
-    fontWeight: '500',
-    minWidth:   52,
-    textAlign:  'right',
+    fontFamily: FONTS.semiBold,
+    fontSize:   FONT_SIZE.sm,
+    letterSpacing: 0.3,
+  },
+  divider: {
+    height:          1,
+    backgroundColor: '#1F1F1F',
   },
 });

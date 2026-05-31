@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
@@ -31,27 +31,23 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
     );
   }
 
-  const chartH = height - PADDING.top - PADDING.bottom - VOL_H - 8;
-  const prices = data.flatMap((d) => [d.high, d.low]);
-  const minP   = Math.min(...prices);
-  const maxP   = Math.max(...prices);
-  const range  = maxP - minP || 1;
-
-  const vols   = data.map((d) => d.volume);
-  const maxVol = Math.max(...vols);
-
-  const toY    = (p: number) => PADDING.top + (1 - (p - minP) / range) * chartH;
-  const totalW = data.length * (CANDLE_W + CANDLE_GAP) + PADDING.left + PADDING.right;
-
+  const chartH    = height - PADDING.top - PADDING.bottom - VOL_H - 8;
+  const prices    = data.flatMap((d) => [d.high, d.low]);
+  const minP      = Math.min(...prices);
+  const maxP      = Math.max(...prices);
+  const range     = maxP - minP || 1;
+  const maxVol    = Math.max(...data.map((d) => d.volume));
+  const toY       = (p: number) => PADDING.top + (1 - (p - minP) / range) * chartH;
+  const totalW    = data.length * (CANDLE_W + CANDLE_GAP) + PADDING.left + PADDING.right;
   const labelStep = Math.max(1, Math.floor(data.length / 5));
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <Svg width={totalW} height={height}>
         {data.map((c, i) => {
-          const isUp   = c.close >= c.open;
-          const color  = isUp ? Colors.bullish.primary : Colors.bearish.primary;
-          const x      = PADDING.left + i * (CANDLE_W + CANDLE_GAP);
+          const isUp    = c.close >= c.open;
+          const color   = isUp ? Colors.bullish.primary : Colors.bearish.primary;
+          const x       = PADDING.left + i * (CANDLE_W + CANDLE_GAP);
           const bodyTop = toY(Math.max(c.open, c.close));
           const bodyH   = Math.max(1, Math.abs(toY(c.open) - toY(c.close)));
           const volBarH = (c.volume / maxVol) * VOL_H;
@@ -59,35 +55,25 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
 
           return (
             <React.Fragment key={`c-${i}`}>
-              {/* Wick */}
               <Line
                 x1={x + CANDLE_W / 2} y1={toY(c.high)}
                 x2={x + CANDLE_W / 2} y2={toY(c.low)}
                 stroke={color} strokeWidth={0.8}
               />
-              {/* Body */}
               <Rect
                 x={x} y={bodyTop}
                 width={CANDLE_W} height={bodyH}
-                fill={color}
-                rx={1}
-                opacity={0.85}
+                fill={color} rx={1} opacity={0.85}
               />
-              {/* Volume bar */}
               <Rect
                 x={x} y={volY}
                 width={CANDLE_W} height={volBarH}
-                fill={color}
-                rx={1}
-                opacity={0.35}
+                fill={color} rx={1} opacity={0.35}
               />
-              {/* Date label */}
               {i % labelStep === 0 && (
                 <SvgText
-                  x={x + CANDLE_W / 2}
-                  y={height - 6}
-                  fontSize={9}
-                  fill={Colors.text.faint}
+                  x={x + CANDLE_W / 2} y={height - 6}
+                  fontSize={9} fill={Colors.text.faint}
                   textAnchor="middle"
                 >
                   {c.date.slice(5)}
@@ -102,12 +88,6 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
 }
 
 const styles = StyleSheet.create({
-  empty: {
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: 12,
-    color:    Colors.text.faint,
-  },
+  empty:     { alignItems: 'center', justifyContent: 'center' },
+  emptyText: { fontSize: 12, color: Colors.text.faint, fontFamily: 'Montserrat_400Regular' },
 });

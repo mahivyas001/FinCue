@@ -1,9 +1,11 @@
+// components/stock/WatchlistItem.tsx
+
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import { Colors, signalColor } from '@/constants/colors';
-import { Signal } from '@/types/stock';
+import { Colors, Signal, signalColor } from '@/constants/colors';
+import { Fonts } from '@/constants/fonts';
 import SignalBadge from '@/components/ui/SignalBadge';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -24,6 +26,7 @@ export default function WatchlistItem({ stock }: WatchlistItemProps) {
   const remove   = useAppStore(s => s.removeFromWatchlist);
   const currency = stock.market === 'IN' ? '₹' : '$';
   const isPos    = stock.changePercent >= 0;
+  const changeColor = isPos ? Colors.bullish.primary : Colors.bearish.primary;
 
   return (
     <TouchableOpacity
@@ -51,7 +54,7 @@ export default function WatchlistItem({ stock }: WatchlistItemProps) {
             maximumFractionDigits: 2,
           })}
         </Text>
-        <Text style={[styles.change, { color: isPos ? Colors.bullish.primary : Colors.bearish.primary }]}>
+        <Text style={[styles.change, { color: changeColor }]}>
           {isPos ? '+' : ''}{stock.changePercent.toFixed(2)}%
         </Text>
       </View>
@@ -74,47 +77,49 @@ const styles = StyleSheet.create({
     alignItems:      'center',
     backgroundColor: Colors.bg.card,
     borderRadius:    14,
-    padding:         12,
-    marginBottom:    8,
-    gap:             10,
+    padding:         14,
+    marginBottom:    10,
+    gap:             12,
   },
   avatar: {
-    width:           38,
-    height:          38,
-    borderRadius:    19,
+    width:           40,
+    height:          40,
+    borderRadius:    20,
     backgroundColor: Colors.bg.elevated,
     alignItems:      'center',
     justifyContent:  'center',
   },
   avatarText: {
-    fontSize:   15,
-    fontWeight: '600',
+    fontSize:   16,
     color:      Colors.text.primary,
+    fontFamily: Fonts.bold,
   },
   mid: {
     flex: 1,
-    gap:  3,
+    gap:  4,
   },
   symbol: {
-    fontSize:   14,
-    fontWeight: '600',
+    fontSize:   15,
     color:      Colors.text.primary,
+    fontFamily: Fonts.bold,
   },
   name: {
-    fontSize: 11,
-    color:    Colors.text.muted,
+    fontSize:   12,
+    color:      Colors.text.muted,
+    fontFamily: Fonts.regular,
   },
   right: {
     alignItems: 'flex-end',
-    gap:        3,
+    gap:        4,
   },
   price: {
-    fontSize:   14,
-    fontWeight: '600',
+    fontSize:   15,
     color:      Colors.text.primary,
+    fontFamily: Fonts.semiBold,
   },
   change: {
-    fontSize: 12,
+    fontSize:   13,
+    fontFamily: Fonts.medium,
   },
   removeBtn: {
     padding: 4,

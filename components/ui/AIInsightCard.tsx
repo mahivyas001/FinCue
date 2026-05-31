@@ -1,14 +1,17 @@
+// components/ui/AIInsightCard.tsx
+
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, SignalType, signalColor, signalTint } from '@/constants/colors';
+import { Colors, Signal, signalColor, signalTint } from '@/constants/colors';
+import { Fonts } from '@/constants/fonts';
 
 interface AIInsightCardProps {
-  signal: SignalType;
-  confidence: number;
-  explanation: string;       // main body copy
-  triggers?: string[];       // checklist items
+  signal:        Signal;
+  confidence:    number;
+  explanation:   string;
+  triggers?:     string[];
   isBeginnerMode?: boolean;
-  isLoading?: boolean;
+  isLoading?:    boolean;
 }
 
 export default function AIInsightCard({
@@ -25,17 +28,19 @@ export default function AIInsightCard({
   if (isLoading) {
     return (
       <View style={styles.card}>
-        <View style={[styles.shimmer, { width: '40%', marginBottom: 10 }]} />
-        <View style={[styles.shimmer, { width: '100%', marginBottom: 6 }]} />
-        <View style={[styles.shimmer, { width: '85%' }]} />
+        <View style={[styles.shimmer, { width: '40%', marginBottom: 16 }]} />
+        <View style={[styles.shimmer, { width: '100%', marginBottom: 8 }]} />
+        <View style={[styles.shimmer, { width: '100%', marginBottom: 8 }]} />
+        <View style={[styles.shimmer, { width: '70%' }]} />
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={[styles.card, { borderColor: color + '30', borderWidth: 1 }]}>
+
+      {/* Label row — small and secondary */}
+      <View style={styles.labelRow}>
         <Text style={styles.sectionLabel}>
           {isBeginnerMode ? 'AI Insight' : 'AI Analysis'}
         </Text>
@@ -46,8 +51,8 @@ export default function AIInsightCard({
         </View>
       </View>
 
-      {/* Body */}
-      <Text style={styles.body}>{explanation}</Text>
+      {/* Explanation — HERO, big and prominent */}
+      <Text style={styles.explanationHero}>{explanation}</Text>
 
       {/* Triggers checklist */}
       {triggers.length > 0 && (
@@ -62,6 +67,11 @@ export default function AIInsightCard({
           ))}
         </View>
       )}
+
+      {/* Bottom disclaimer */}
+      <Text style={styles.disclaimer}>
+        This is not financial advice. AI interprets data only.
+      </Text>
     </View>
   );
 }
@@ -69,63 +79,79 @@ export default function AIInsightCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.bg.card,
-    borderRadius:    16,
-    padding:         16,
+    borderRadius:    20,
+    padding:         20,
   },
-  header: {
+  labelRow: {
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'space-between',
-    marginBottom:   10,
+    marginBottom:   16,
   },
   sectionLabel: {
     fontSize:      10,
     color:         Colors.text.faint,
-    letterSpacing: 0.1,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
+    fontFamily:    'Montserrat_600SemiBold',
   },
   confidencePill: {
-    paddingVertical:   3,
-    paddingHorizontal: 10,
+    paddingVertical:   4,
+    paddingHorizontal: 12,
     borderRadius:      100,
   },
   confidenceText: {
     fontSize:   12,
-    fontWeight: '500',
+    fontFamily: 'Montserrat_600SemiBold',
   },
-  body: {
-    fontSize:    13,
-    color:       Colors.text.muted,
-    lineHeight:  20,
+
+  // ── HERO explanation ──────────────────────
+  explanationHero: {
+    fontSize:    20,
+    lineHeight:  30,
+    color:       Colors.text.primary,
+    fontFamily:  'Montserrat_600SemiBold',
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
+
   triggerList: {
-    marginTop: 10,
-    gap:       6,
+    gap:          8,
+    marginBottom: 16,
   },
   triggerRow: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           8,
+    gap:           10,
   },
   checkCircle: {
-    width:         16,
-    height:        16,
-    borderRadius:  8,
-    alignItems:    'center',
+    width:          18,
+    height:         18,
+    borderRadius:   9,
+    alignItems:     'center',
     justifyContent: 'center',
   },
   checkMark: {
-    fontSize:   9,
-    fontWeight: '600',
+    fontSize:   10,
+    fontFamily: 'Montserrat_700Bold',
   },
   triggerText: {
-    fontSize: 12,
-    color:    Colors.text.dim,
-    flex:     1,
+    fontSize:   13,
+    color:      Colors.text.muted,
+    fontFamily: 'Montserrat_400Regular',
+    flex:       1,
+    lineHeight: 18,
+  },
+  disclaimer: {
+    fontSize:   10,
+    color:      Colors.text.faint,
+    fontFamily: 'Montserrat_400Regular',
+    marginTop:  4,
   },
   shimmer: {
-    height:       12,
-    borderRadius: 6,
+    height:          14,
+    borderRadius:    7,
     backgroundColor: Colors.bg.elevated,
+    marginBottom:    8,
   },
 });

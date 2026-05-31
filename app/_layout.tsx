@@ -3,7 +3,18 @@
 import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
+import {
+  useFonts,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  Montserrat_800ExtraBold,
+} from '@expo-google-fonts/montserrat';
+import * as SplashScreen from 'expo-splash-screen';
 import '@/global.css';
+
+SplashScreen.preventAutoHideAsync();
 
 function OnboardingGate() {
   const router = useRouter();
@@ -22,6 +33,20 @@ function OnboardingGate() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Montserrat_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <>
       <OnboardingGate />
