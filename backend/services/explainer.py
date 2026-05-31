@@ -1,6 +1,12 @@
+# backend/services/explainer.py
+
 import anthropic
 import os
+import time
+import logging
 from models.analysis import AnalysisResponse
+
+logger = logging.getLogger(__name__)
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -34,16 +40,30 @@ Write a concise 2-3 sentence technical summary. Use proper trading terminology.
 Do NOT predict future price or guarantee outcomes.
 Do NOT use the words BUY or SELL. Use Bullish / Bearish / Neutral instead."""
 
-_cache: dict[str, str] = {}
+# TTL cache — 15 minutes per symbol+mode
+_cache: dict[str, tuple[str, float]] = {}
+_CACHE_TTL = 15 * 60  # seconds
+
 
 def _cache_key(symbol: str, mode: str) -> str:
     return f"{symbol.upper()}:{mode}"
 
+
 def get_cached_explanation(symbol: str, mode: str) -> str | None:
-    return _cache.get(_cache_key(symbol, mode))
+    key = _cache_key(symbol, mode)
+    entry = _cache.get(key)
+    if entry is None:
+        return None
+    text, ts = entry
+    if time.time() - ts > _CACHE_TTL:
+        del _cache[key]
+        return None
+    return text
+
 
 def set_cached_explanation(symbol: str, mode: str, text: str) -> None:
-    _cache[_cache_key(symbol, mode)] = text
+    _cache[_cache_key(symbol, mode)] = (text, time.time())
+
 
 def build_prompt(symbol: str, mode: str, data: AnalysisResponse) -> str:
     rsi_val = data.indicators.rsi
@@ -55,33 +75,43 @@ def build_prompt(symbol: str, mode: str, data: AnalysisResponse) -> str:
         rsi_label = "neutral zone"
 
     params = {
-        "symbol": symbol.upper(),
-        "signal": data.signal,
+        "symbol":     symbol.upper(),
+        "signal":     data.signal,
         "confidence": data.confidence,
-        "rsi": round(rsi_val, 2),
-        "rsi_label": rsi_label,
-        "macd": data.indicators.macd_signal,
-        "ma": data.indicators.vs_moving_avg,
-        "volume": data.indicators.volume_level,
-        "trend": data.indicators.trend_strength,
+        "rsi":        round(rsi_val, 2),
+        "rsi_label":  rsi_label,
+        "macd":       data.indicators.macd_signal,
+        "ma":         data.indicators.vs_moving_avg,
+        "volume":     data.indicators.volume_level,
+        "trend":      data.indicators.trend_strength,
     }
 
     template = BEGINNER_PROMPT if mode == "beginner" else ADVANCED_PROMPT
     return template.format(**params)
 
+
 async def generate_explanation(symbol: str, mode: str, data: AnalysisResponse) -> str:
     cached = get_cached_explanation(symbol, mode)
     if cached:
+        logger.info(f"[Explain Cache HIT] {symbol} ({mode})")
         return cached
 
+    logger.info(f"[Explain] Generating for {symbol} ({mode})")
     prompt = build_prompt(symbol, mode, data)
 
-    message = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=300,
-        messages=[{"role": "user", "content": prompt}],
+    # Run synchronous Anthropic client in thread pool to avoid blocking event loop
+    import asyncio
+    loop = asyncio.get_event_loop()
+    message = await loop.run_in_executor(
+        None,
+        lambda: client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
+        )
     )
 
     text = message.content[0].text.strip()
     set_cached_explanation(symbol, mode, text)
+    logger.info(f"[Explain] Done for {symbol} ({mode}): {text[:60]}...")
     return text

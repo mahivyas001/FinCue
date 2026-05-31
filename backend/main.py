@@ -1,13 +1,14 @@
 # backend/main.py
-# backend/main.py  — add these 3 lines at the very top, before all other imports
 
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
+
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis
+from routers import explain          # ← add this
 from core.config import settings
 
 logging.basicConfig(
@@ -23,12 +24,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],    # tighten this in production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(analysis.router)
+app.include_router(explain.router)   # ← add this
 
 @app.get("/health")
 def health():

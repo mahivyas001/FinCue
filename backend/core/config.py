@@ -3,7 +3,6 @@
 from dotenv import load_dotenv
 import os
 
-# Absolute path to .env — works regardless of working directory
 _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
 load_dotenv(dotenv_path=_env_path, override=True)
 
