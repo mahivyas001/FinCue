@@ -1,16 +1,12 @@
-// components/stock/IndicatorRow.tsx
-// Fixed: Colors → COLORS, removed valueColor import (doesn't exist)
-
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SignalType, getSignalColor } from '@/constants/colors';
-import { FONTS, FONT_SIZE } from '@/constants/fonts';
+import { Colors, Signal, signalColor } from '@/constants/colors';
 
 interface IndicatorRowProps {
-  label:     string;
-  value:     string | number;
-  signal?:   SignalType;   // optional — colors the value if provided
-  divider?:  boolean;
+  label:    string;
+  value:    string | number;
+  signal?:  Signal;
+  divider?: boolean;
 }
 
 export default function IndicatorRow({
@@ -19,7 +15,7 @@ export default function IndicatorRow({
   signal,
   divider = true,
 }: IndicatorRowProps) {
-  const valueColor = signal ? getSignalColor(signal) : COLORS.textPrimary;
+  const valueColor = signal ? signalColor(signal) : Colors.text.primary;
 
   return (
     <>
@@ -36,23 +32,23 @@ export default function IndicatorRow({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection:  'row',
-    justifyContent: 'space-between',
-    alignItems:     'center',
+    flexDirection:   'row',
+    justifyContent:  'space-between',
+    alignItems:      'center',
     paddingVertical: 12,
   },
   label: {
-    fontFamily: FONTS.medium,
-    fontSize:   FONT_SIZE.sm,
-    color:      COLORS.textSub,
+    fontSize:   13,
+    color:      Colors.text.muted,
+    fontFamily: 'Montserrat_500Medium',
   },
   value: {
-    fontFamily: FONTS.semiBold,
-    fontSize:   FONT_SIZE.sm,
+    fontSize:      13,
     letterSpacing: 0.3,
+    fontFamily:    'Montserrat_600SemiBold',
   },
   divider: {
     height:          1,
-    backgroundColor: '#1F1F1F',
+    backgroundColor: Colors.border.default,
   },
 });
