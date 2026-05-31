@@ -1,5 +1,6 @@
 # backend/routers/analysis.py
 
+import traceback
 import requests
 import logging
 from fastapi import APIRouter, HTTPException
@@ -30,7 +31,10 @@ def get_analysis(symbol: str):
         symbol = symbol.upper().strip()
         return analyze(symbol)
     except RuntimeError as e:
+        logger.error(f"[RuntimeError] {symbol}: {e}")
         raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
-        logger.error(f"Analysis failed for {symbol}: {e}")
-        raise HTTPException(status_code=500, detail="Analysis failed.")
+        tb = traceback.format_exc()
+        logger.error(f"[Exception] {symbol}: {e}\n{tb}")
+        print(f"[Exception] {symbol}: {e}\n{tb}")  # force print to terminal
+        raise HTTPException(status_code=500, detail=str(e))
