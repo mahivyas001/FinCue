@@ -1,70 +1,69 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import { Colors, SignalType, signalColor } from '@/constants/colors';
+import { Colors, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import SignalBadge from '@/components/ui/SignalBadge';
+import { useAppStore } from '@/store/useAppStore';
 
 interface WatchlistItemProps {
-  symbol:    string;
-  name:      string;
-  price:     number;
-  changePct: number;
-  signal:    SignalType;
-  market:    'US' | 'IN';
-  onRemove?: () => void;
-  onPress?:  () => void;
+  stock: {
+    symbol:        string;
+    name:          string;
+    price:         number;
+    change:        number;
+    changePercent: number;
+    signal:        Signal;
+    market:        'US' | 'IN';
+  };
 }
 
-export default function WatchlistItem({
-  symbol,
-  name,
-  price,
-  changePct,
-  signal,
-  market,
-  onRemove,
-  onPress,
-}: WatchlistItemProps) {
-  const currency = market === 'IN' ? '₹' : '$';
-  const isPos    = changePct >= 0;
+export default function WatchlistItem({ stock }: WatchlistItemProps) {
+  const router   = useRouter();
+  const remove   = useAppStore(s => s.removeFromWatchlist);
+  const currency = stock.market === 'IN' ? '₹' : '$';
+  const isPos    = stock.changePercent >= 0;
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.75}>
+    <TouchableOpacity
+      style={styles.row}
+      onPress={() => router.push(`/stock/${stock.symbol}`)}
+      activeOpacity={0.75}
+    >
       {/* Avatar */}
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{symbol[0]}</Text>
+        <Text style={styles.avatarText}>{stock.symbol[0]}</Text>
       </View>
 
       {/* Name + signal */}
       <View style={styles.mid}>
-        <Text style={styles.symbol}>{symbol}</Text>
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <SignalBadge signal={signal} size="sm" />
+        <Text style={styles.symbol}>{stock.symbol}</Text>
+        <Text style={styles.name} numberOfLines={1}>{stock.name}</Text>
+        <SignalBadge signal={stock.signal} size="sm" />
       </View>
 
       {/* Price + change */}
       <View style={styles.right}>
         <Text style={styles.price}>
-          {currency}{price.toLocaleString('en-US', {
+          {currency}{stock.price.toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
         </Text>
-        <Text style={[styles.change, { color: signalColor(signal) }]}>
-          {isPos ? '+' : ''}{changePct.toFixed(2)}%
+        <Text style={[styles.change, { color: isPos ? Colors.bullish.primary : Colors.bearish.primary }]}>
+          {isPos ? '+' : ''}{stock.changePercent.toFixed(2)}%
         </Text>
       </View>
 
       {/* Remove */}
-      {onRemove && (
-        <TouchableOpacity
-          onPress={onRemove}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.removeBtn}
-        >
-          <Trash2 size={14} color={Colors.text.faint} />
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        onPress={() => remove(stock.symbol)}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        style={styles.removeBtn}
+      >
+        <Trash2 size={14} color={Colors.text.faint} />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -103,7 +102,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 11,
-    color:    Colors.text.dim,
+    color:    Colors.text.muted,
   },
   right: {
     alignItems: 'flex-end',
