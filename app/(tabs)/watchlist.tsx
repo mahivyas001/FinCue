@@ -21,9 +21,7 @@ export default function WatchlistScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  const watchlistSymbols = watchlist.map((item) =>
-    typeof item === "string" ? item : item.symbol
-  );
+  const watchlistSymbols = watchlist; // already string[]
 
   const { quotes, loading, error, refresh } = useMultipleQuotes(watchlistSymbols);
 
