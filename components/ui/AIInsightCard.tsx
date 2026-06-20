@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Signal, signalColor, signalTint } from '@/constants/colors';
-import { Fonts } from '@/constants/fonts';
+import { COLORS, SignalType, getSignalColor, signalColor, signalTint } from '@/constants/colors';
+import { Signal } from '@/types/stock';
+import { FONTS } from '@/constants/fonts';
 
 interface AIInsightCardProps {
   signal:        Signal;
@@ -78,7 +79,7 @@ export default function AIInsightCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius:    20,
     padding:         20,
   },
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize:      10,
-    color:         Colors.text.faint,
+    color:         COLORS.textPrimary.faint,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     fontFamily:    'Montserrat_600SemiBold',
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
   explanationHero: {
     fontSize:    20,
     lineHeight:  30,
-    color:       Colors.text.primary,
+    color:       COLORS.textPrimary.primary,
     fontFamily:  'Montserrat_600SemiBold',
     marginBottom: 20,
     letterSpacing: -0.3,
@@ -137,21 +138,21 @@ const styles = StyleSheet.create({
   },
   triggerText: {
     fontSize:   13,
-    color:      Colors.text.muted,
+    color:      COLORS.textPrimary.muted,
     fontFamily: 'Montserrat_400Regular',
     flex:       1,
     lineHeight: 18,
   },
   disclaimer: {
     fontSize:   10,
-    color:      Colors.text.faint,
+    color:      COLORS.textPrimary.faint,
     fontFamily: 'Montserrat_400Regular',
     marginTop:  4,
   },
   shimmer: {
     height:          14,
     borderRadius:    7,
-    backgroundColor: Colors.bg.elevated,
+    backgroundColor: COLORS.appBg.elevated,
     marginBottom:    8,
   },
 });

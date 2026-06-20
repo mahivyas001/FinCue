@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { COLORS } from '@/constants/colors';
 
 interface Candle {
   date:   string;
@@ -46,7 +46,7 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
       <Svg width={totalW} height={height}>
         {data.map((c, i) => {
           const isUp    = c.close >= c.open;
-          const color   = isUp ? Colors.bullish.primary : Colors.bearish.primary;
+          const color   = isUp ? COLORS.bullish : COLORS.bearish;
           const x       = PADDING.left + i * (CANDLE_W + CANDLE_GAP);
           const bodyTop = toY(Math.max(c.open, c.close));
           const bodyH   = Math.max(1, Math.abs(toY(c.open) - toY(c.close)));
@@ -73,7 +73,7 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
               {i % labelStep === 0 && (
                 <SvgText
                   x={x + CANDLE_W / 2} y={height - 6}
-                  fontSize={9} fill={Colors.text.faint}
+                  fontSize={9} fill={COLORS.textPrimary.faint}
                   textAnchor="middle"
                 >
                   {c.date.slice(5)}
@@ -89,5 +89,5 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
 
 const styles = StyleSheet.create({
   empty:     { alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontSize: 12, color: Colors.text.faint, fontFamily: 'Montserrat_400Regular' },
+  emptyText: { fontSize: 12, color: COLORS.textPrimary.faint, fontFamily: 'Montserrat_400Regular' },
 });

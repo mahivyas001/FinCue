@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { X, Search } from 'lucide-react-native';
-import { Colors } from '@/constants/colors';
+import { COLORS } from '@/constants/colors';
 
 interface SearchBarProps {
   value: string;
@@ -27,14 +27,14 @@ export default function SearchBar({
     >
       <Search
         size={16}
-        color={focused ? Colors.bullish.primary : Colors.text.faint}
+        color={focused ? COLORS.bullish : COLORS.textPrimary.faint}
         style={styles.icon}
       />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder} // ← now passed through correctly
-        placeholderTextColor={Colors.text.faint}
+        placeholderTextColor={COLORS.textPrimary.faint}
         style={styles.input}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -44,7 +44,7 @@ export default function SearchBar({
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={onClear} style={styles.clearBtn}>
-          <X size={14} color={Colors.text.faint} />
+          <X size={14} color={COLORS.textPrimary.faint} />
         </TouchableOpacity>
       )}
     </View>
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   containerFocused: {
-    borderColor: Colors.bullish.primary,
+    borderColor: COLORS.bullish,
   },
   icon: {
     marginRight: 8,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: COLORS.textPrimary.primary,
     padding: 0,
   },
   clearBtn: {

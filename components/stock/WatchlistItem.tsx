@@ -4,8 +4,9 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import { Colors, Signal, signalColor } from '@/constants/colors';
-import { Fonts } from '@/constants/fonts';
+import { COLORS, SignalType, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
+import { FONTS } from '@/constants/fonts';
 import SignalBadge from '@/components/ui/SignalBadge';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -26,7 +27,7 @@ export default function WatchlistItem({ stock }: WatchlistItemProps) {
   const remove   = useAppStore(s => s.removeFromWatchlist);
   const currency = stock.market === 'IN' ? '₹' : '$';
   const isPos    = stock.changePercent >= 0;
-  const changeColor = isPos ? Colors.bullish.primary : Colors.bearish.primary;
+  const changeColor = isPos ? COLORS.bullish : COLORS.bearish;
 
   return (
     <TouchableOpacity
@@ -65,7 +66,7 @@ export default function WatchlistItem({ stock }: WatchlistItemProps) {
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={styles.removeBtn}
       >
-        <Trash2 size={14} color={Colors.text.faint} />
+        <Trash2 size={14} color={COLORS.textPrimary.faint} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -75,7 +76,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection:   'row',
     alignItems:      'center',
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius:    14,
     padding:         14,
     marginBottom:    10,
@@ -85,14 +86,14 @@ const styles = StyleSheet.create({
     width:           40,
     height:          40,
     borderRadius:    20,
-    backgroundColor: Colors.bg.elevated,
+    backgroundColor: COLORS.appBg.elevated,
     alignItems:      'center',
     justifyContent:  'center',
   },
   avatarText: {
     fontSize:   16,
-    color:      Colors.text.primary,
-    fontFamily: Fonts.bold,
+    color:      COLORS.textPrimary.primary,
+    fontFamily: FONTS.bold,
   },
   mid: {
     flex: 1,
@@ -100,13 +101,13 @@ const styles = StyleSheet.create({
   },
   symbol: {
     fontSize:   15,
-    color:      Colors.text.primary,
-    fontFamily: Fonts.bold,
+    color:      COLORS.textPrimary.primary,
+    fontFamily: FONTS.bold,
   },
   name: {
     fontSize:   12,
-    color:      Colors.text.muted,
-    fontFamily: Fonts.regular,
+    color:      COLORS.textPrimary.muted,
+    fontFamily: FONTS.regular,
   },
   right: {
     alignItems: 'flex-end',
@@ -114,12 +115,12 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize:   15,
-    color:      Colors.text.primary,
-    fontFamily: Fonts.semiBold,
+    color:      COLORS.textPrimary.primary,
+    fontFamily: FONTS.semiBold,
   },
   change: {
     fontSize:   13,
-    fontFamily: Fonts.medium,
+    fontFamily: FONTS.medium,
   },
   removeBtn: {
     padding: 4,

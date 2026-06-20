@@ -3,9 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Star } from 'lucide-react-native';
 import SignalBadge from '@/components/ui/SignalBadge';
-import { Colors, Signal } from '@/constants/colors';
+import { COLORS, SignalType } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
-import type { Stock } from '@/types/stock';
+import type { Stock, Signal } from '@/types/stock';
+import { useBehaviorStore } from '@/store/useBehaviorStore';
 
 interface StockCardProps {
   stock:              Stock;
@@ -28,11 +29,15 @@ export default function StockCard({
   const change    = liveChange  ?? stock.change;
   const changePct = liveChangePercent ?? stock.changePercent;
   const isPositive = change >= 0;
-  const changeColor = isPositive ? Colors.bullish.primary : Colors.bearish.primary;
+  const changeColor = isPositive ? COLORS.bullish : COLORS.bearish;
   const currency  = stock.market === 'IN' ? '₹' : '$';
 
   function toggleWatchlist() {
     const { addToWatchlist, removeFromWatchlist } = useAppStore.getState();
+    if (!inWatchlist) {
+      const capSignal = stock.signal === 'bullish' ? 'Bullish' : stock.signal === 'bearish' ? 'Bearish' : 'Neutral';
+      useBehaviorStore.getState().recordWatchlistAdd(stock.symbol, price, capSignal, changePct);
+    }
     inWatchlist ? removeFromWatchlist(stock.symbol) : addToWatchlist(stock.symbol);
   }
 
@@ -68,8 +73,8 @@ export default function StockCard({
           >
             <Star
               size={16}
-              color={inWatchlist ? Colors.bullish.primary : Colors.text.faint}
-              fill={inWatchlist ? Colors.bullish.primary : 'transparent'}
+              color={inWatchlist ? COLORS.bullish : COLORS.textPrimary.faint}
+              fill={inWatchlist ? COLORS.bullish : 'transparent'}
             />
           </TouchableOpacity>
         </View>
@@ -88,10 +93,10 @@ export default function StockCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius:    16,
     borderWidth:     1,
-    borderColor:     Colors.border.default,
+    borderColor:     COLORS.border.default,
     padding:         16,
     flexDirection:   'row',
     alignItems:      'center',
@@ -108,15 +113,15 @@ const styles = StyleSheet.create({
     width:           44,
     height:          44,
     borderRadius:    12,
-    backgroundColor: Colors.bg.elevated,
+    backgroundColor: COLORS.appBg.elevated,
     borderWidth:     1,
-    borderColor:     Colors.border.default,
+    borderColor:     COLORS.border.default,
     alignItems:      'center',
     justifyContent:  'center',
   },
   avatarText: {
     fontSize:   16,
-    color:      Colors.text.primary,
+    color:      COLORS.textPrimary.primary,
     fontFamily: 'Montserrat_800ExtraBold',
   },
   nameBlock: {
@@ -125,17 +130,17 @@ const styles = StyleSheet.create({
   },
   symbol: {
     fontSize:      15,
-    color:         Colors.text.primary,
+    color:         COLORS.textPrimary.primary,
     letterSpacing: 0.5,
     fontFamily:    'Montserrat_700Bold',
   },
   name: {
     fontSize:   12,
-    color:      Colors.text.muted,
+    color:      COLORS.textPrimary.muted,
     fontFamily: 'Montserrat_400Regular',
   },
   marketTag: {
-    backgroundColor:   Colors.bg.elevated,
+    backgroundColor:   COLORS.appBg.elevated,
     borderRadius:      4,
     paddingHorizontal: 6,
     paddingVertical:   2,
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
   },
   marketText: {
     fontSize:      10,
-    color:         Colors.text.faint,
+    color:         COLORS.textPrimary.faint,
     letterSpacing: 0.8,
     fontFamily:    'Montserrat_600SemiBold',
   },
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize:      15,
-    color:         Colors.text.primary,
+    color:         COLORS.textPrimary.primary,
     letterSpacing: 0.3,
     fontFamily:    'Montserrat_700Bold',
   },

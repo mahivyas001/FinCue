@@ -3,7 +3,7 @@
 // No AI API needed — deterministic logic based on real data.
 // Can be swapped for Claude API later with zero changes to UI.
 
-import { Signal } from "@/types/stock";
+import { SignalType, Signal } from "@/types/stock";
 
 export interface IndicatorInput {
   symbol: string;

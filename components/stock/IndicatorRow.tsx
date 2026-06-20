@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Signal, signalColor } from '@/constants/colors';
+import { COLORS, SignalType, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 
 interface IndicatorRowProps {
   label:    string;
@@ -15,7 +16,7 @@ export default function IndicatorRow({
   signal,
   divider = true,
 }: IndicatorRowProps) {
-  const valueColor = signal ? signalColor(signal) : Colors.text.primary;
+  const valueColor = signal ? signalColor(signal) : COLORS.textPrimary.primary;
 
   return (
     <>
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize:   13,
-    color:      Colors.text.muted,
+    color:      COLORS.textPrimary.muted,
     fontFamily: 'Montserrat_500Medium',
   },
   value: {
@@ -49,6 +50,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height:          1,
-    backgroundColor: Colors.border.default,
+    backgroundColor: COLORS.border.default,
   },
 });

@@ -73,14 +73,7 @@ export default function SearchScreen() {
               {filtered.map((stock) => (
                 <StockCard
                   key={stock.symbol}
-                  symbol={stock.symbol}
-                  name={stock.name}
-                  price={stock.price}
-                  change={stock.change}
-                  changePercent={stock.changePercent}
-                  signal={stock.signal}
-                  confidence={stock.confidence}
-                  market={stock.market}
+                  stock={stock}
                 />
               ))}
             </>

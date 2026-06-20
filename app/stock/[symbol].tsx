@@ -6,29 +6,31 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Star, RefreshCw, AlertCircle } from 'lucide-react-native';
-import { COLORS, SignalType, getSignalColor, getSignalTint } from '@/constants/colors';
-import { FONTS, FONT_SIZE } from '@/constants/fonts';
+import { COLORS, SignalType, getSignalColor, signalColor, signalTint } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import SignalBadge from '@/components/ui/SignalBadge';
 import AIInsightCard from '@/components/ui/AIInsightCard';
 import IndicatorRow from '@/components/stock/IndicatorRow';
 import ChartContainer from '@/components/charts/ChartContainer';
 import { useAppStore } from '@/store/useAppStore';
 import { useStockQuote } from '@/hooks/useStockQuote';
+import { useBehaviorStore } from '@/store/useBehaviorStore';
+import BehaviorInsightCard from '@/components/insights/BehaviorInsightCard';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { MOCK_STOCKS } from '@/constants/mockData';
 
 export default function StockDetailScreen() {
-  const params = useLocalSearchParams();
-  const symbol = params.symbol as string;
-  const router = useRouter();
+  const params   = useLocalSearchParams();
+  const symbol   = params.symbol as string;
+  const router   = useRouter();
 
-  const mode     = useAppStore(s => s.mode);
-  const watchlist = useAppStore(s => s.watchlist);
+  const mode       = useAppStore(s => s.mode);
+  const watchlist  = useAppStore(s => s.watchlist);
   const isAdvanced = mode === 'advanced';
 
   const stockMeta = MOCK_STOCKS.find((s) => s.symbol === symbol);
 
-  const { stock, isLoading: quoteLoading, refresh: refreshQuote } = useStockQuote(symbol ?? '');
+  const { stock, isLoading: quoteLoading, refresh: refreshQuote }             = useStockQuote(symbol ?? '');
   const { analysis, isLoading: analysisLoading, error: analysisError, refresh: refreshAnalysis } = useAnalysis(symbol ?? '');
 
   const explanationMode = isAdvanced ? 'advanced' : 'beginner';
@@ -43,8 +45,27 @@ export default function StockDetailScreen() {
   const currency  = stockMeta?.market === 'IN' ? '₹' : '$';
   const isPos     = change >= 0;
 
-  const signal: SignalType = (analysis?.signal ?? 'neutral') as SignalType;
-  const confidence         = analysis?.confidence ?? 0;
+  const signal: Signal = (analysis?.signal ?? 'neutral') as Signal;
+  const confidence     = analysis?.confidence ?? 0;
+  const sigColor       = signalColor(signal);
+  const sigTint        = signalTint(signal);
+
+  const recordView = useBehaviorStore(s => s.recordView);
+  const activeInsights = useBehaviorStore(s => s.activeInsights);
+  const dismissInsight = useBehaviorStore(s => s.dismissInsight);
+
+  const symbolInsights = activeInsights.filter(
+    ins => ins.symbol === symbol && ins.type !== 'confirmation_seeking'
+  );
+
+  const hasTrackedView = React.useRef(false);
+
+  React.useEffect(() => {
+    if (symbol && price > 0 && !hasTrackedView.current) {
+      recordView(symbol, price);
+      hasTrackedView.current = true;
+    }
+  }, [symbol, price, recordView]);
 
   const rsi        = analysis?.indicators?.rsi            ?? null;
   const macdSignal = analysis?.indicators?.macd_signal    ?? '—';
@@ -64,16 +85,12 @@ export default function StockDetailScreen() {
       : 'No strong direction yet — the stock is in a wait-and-see zone.'
     : explanationData?.explanation ?? '';
 
-  const watchForText = isAdvanced
-    ? `MA50: ${maVsLabel} · Trend: ${trendLabel} · Volume: ${volLabel}`
-    : signal === 'bullish'
-    ? 'Watch for volume increasing to confirm the move'
-    : signal === 'bearish'
-    ? 'Watch for price stabilizing before considering entry'
-    : 'Wait for a clear signal before taking action';
-
   const handleToggleWatchlist = () => {
     const { addToWatchlist, removeFromWatchlist } = useAppStore.getState();
+    if (!isSaved) {
+      const capSignal = signal === 'bullish' ? 'Bullish' : signal === 'bearish' ? 'Bearish' : 'Neutral';
+      useBehaviorStore.getState().recordWatchlistAdd(symbol ?? '', price, capSignal, changePct);
+    }
     isSaved ? removeFromWatchlist(symbol ?? '') : addToWatchlist(symbol ?? '');
   };
 
@@ -98,13 +115,13 @@ export default function StockDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-          <ChevronLeft size={20} color={COLORS.textPrimary} />
+          <ChevronLeft size={20} color={COLORS.textPrimary.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{stockMeta?.name ?? symbol}</Text>
         <TouchableOpacity style={styles.iconBtn} onPress={handleToggleWatchlist}>
           <Star
             size={18}
-            color={isSaved ? COLORS.bullish : COLORS.textMuted}
+            color={isSaved ? COLORS.bullish : COLORS.textPrimary.faint}
             fill={isSaved ? COLORS.bullish : 'transparent'}
           />
         </TouchableOpacity>
@@ -132,12 +149,12 @@ export default function StockDetailScreen() {
               maximumFractionDigits: 2,
             })}
           </Text>
-          <View style={[styles.changePill, { backgroundColor: getSignalTint(signal) }]}>
-            {!quoteLoading && <View style={[styles.liveDot, { backgroundColor: getSignalColor(signal) }]} />}
+          <View style={[styles.changePill, { backgroundColor: sigTint }]}>
+            {!quoteLoading && <View style={[styles.liveDot, { backgroundColor: sigColor }]} />}
             {quoteLoading ? (
-              <ActivityIndicator size="small" color={getSignalColor(signal)} />
+              <ActivityIndicator size="small" color={sigColor} />
             ) : (
-              <Text style={[styles.changePillText, { color: getSignalColor(signal) }]}>
+              <Text style={[styles.changePillText, { color: sigColor }]}>
                 {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{changePct.toFixed(2)}%) Today
               </Text>
             )}
@@ -149,8 +166,8 @@ export default function StockDetailScreen() {
           <SignalBadge signal={signal} confidence={confidence} size="md" />
           <TouchableOpacity style={styles.refreshBtn} onPress={handleRefresh} disabled={isLoading}>
             {isLoading
-              ? <ActivityIndicator size="small" color={COLORS.textMuted} />
-              : <RefreshCw size={14} color={COLORS.textMuted} />
+              ? <ActivityIndicator size="small" color={COLORS.textPrimary.muted} />
+              : <RefreshCw size={14} color={COLORS.textPrimary.muted} />
             }
           </TouchableOpacity>
         </View>
@@ -163,16 +180,27 @@ export default function StockDetailScreen() {
           </View>
         )}
 
-        {/* ── AI Insight — FIRST AND PRIMARY ── */}
+        {/* AI Insight — PRIMARY */}
         <View style={styles.section}>
           <AIInsightCard
             signal={signal}
             confidence={confidence}
             explanation={explanationText}
-            mode={isAdvanced ? 'advanced' : 'beginner'}
-            watchFor={watchForText}
+            isBeginnerMode={!isAdvanced}
+            isLoading={analysisLoading || explanationLoading}
           />
         </View>
+
+        {/* Behavioral Insights */}
+        {symbolInsights.map(insight => (
+          <View key={insight.id} style={styles.section}>
+            <BehaviorInsightCard
+              insight={insight}
+              isBeginnerMode={!isAdvanced}
+              onDismiss={() => dismissInsight(insight.id)}
+            />
+          </View>
+        ))}
 
         {/* Chart */}
         <View style={styles.section}>
@@ -184,17 +212,15 @@ export default function StockDetailScreen() {
           <Text style={styles.sectionLabel}>Technical Signals</Text>
           {analysisLoading ? (
             <View style={styles.shimmerGroup}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <View key={n} style={styles.shimmer} />
-              ))}
+              {[1, 2, 3, 4, 5].map((n) => <View key={n} style={styles.shimmer} />)}
             </View>
           ) : (
             <>
-              <IndicatorRow label="RSI (14)"       value={rsi !== null ? rsi : '—'}  signal={rsi !== null ? (rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : 'neutral') : 'neutral'} />
-              <IndicatorRow label="MACD"            value={macdSignal}                signal={macdSignal === 'Bullish' ? 'bullish' : macdSignal === 'Bearish' ? 'bearish' : 'neutral'} />
-              <IndicatorRow label="vs MA 50"        value={maVsLabel}                 signal={maVsLabel === 'Above' ? 'bullish' : maVsLabel === 'Below' ? 'bearish' : 'neutral'} />
-              <IndicatorRow label="Volume"          value={volLabel}                  signal={volLabel === 'High' ? 'bullish' : volLabel === 'Low' ? 'bearish' : 'neutral'} />
-              <IndicatorRow label="Trend Strength"  value={trendLabel}                signal={trendLabel === 'Strong' ? 'bullish' : trendLabel === 'Weak' ? 'bearish' : 'neutral'} divider={false} />
+              <IndicatorRow label="RSI (14)"      value={rsi !== null ? rsi : '—'}  signal={rsi !== null ? (rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : 'neutral') : 'neutral'} />
+              <IndicatorRow label="MACD"           value={macdSignal}                signal={macdSignal === 'Bullish' ? 'bullish' : macdSignal === 'Bearish' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="vs MA 50"       value={maVsLabel}                 signal={maVsLabel === 'Above' ? 'bullish' : maVsLabel === 'Below' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="Volume"         value={volLabel}                  signal={volLabel === 'High' ? 'bullish' : volLabel === 'Low' ? 'bearish' : 'neutral'} />
+              <IndicatorRow label="Trend Strength" value={trendLabel}                signal={trendLabel === 'Strong' ? 'bullish' : trendLabel === 'Weak' ? 'bearish' : 'neutral'} divider={false} />
             </>
           )}
         </View>
@@ -207,7 +233,7 @@ export default function StockDetailScreen() {
             continued higher, others reversed. Past patterns are not a predictor of future results.
           </Text>
           <View style={styles.disclaimerRow}>
-            <AlertCircle size={11} color={COLORS.textFaint} />
+            <AlertCircle size={11} color={COLORS.textPrimary.faint} />
             <Text style={styles.disclaimerText}>Historical context only — not a prediction</Text>
           </View>
         </View>
@@ -219,31 +245,31 @@ export default function StockDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:         { flex: 1, backgroundColor: COLORS.bg },
+  screen:         { flex: 1, backgroundColor: COLORS.appBg.base },
   header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
-  iconBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:    { fontSize: FONT_SIZE.sm, fontFamily: FONTS.medium, color: COLORS.textSub, letterSpacing: 0.05 },
+  iconBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.appBg.card, alignItems: 'center', justifyContent: 'center' },
+  headerTitle:    { fontSize: 13, fontFamily: 'Montserrat_500Medium', color: COLORS.textPrimary.muted },
   content:        { paddingHorizontal: 20, paddingTop: 8 },
   priceHero:      { alignItems: 'center', paddingTop: 16, paddingBottom: 12 },
-  symbolLabel:    { fontSize: FONT_SIZE.xs, fontFamily: FONTS.semiBold, color: COLORS.textFaint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
-  priceNumber:    { fontSize: FONT_SIZE.hero, fontFamily: FONTS.bold, color: COLORS.textPrimary, letterSpacing: -2, lineHeight: 56 },
+  symbolLabel:    { fontSize: 11, fontFamily: 'Montserrat_600SemiBold', color: COLORS.textPrimary.faint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
+  priceNumber:    { fontSize: 52, fontFamily: 'Montserrat_700Bold', color: COLORS.textPrimary.primary, letterSpacing: -2, lineHeight: 56 },
   changePill:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 14, borderRadius: 100, marginTop: 10, minHeight: 32 },
   liveDot:        { width: 6, height: 6, borderRadius: 3 },
-  changePillText: { fontSize: FONT_SIZE.sm, fontFamily: FONTS.semiBold },
+  changePillText: { fontSize: 13, fontFamily: 'Montserrat_600SemiBold' },
   signalRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
-  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.bearishBg, borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bearishBorder },
-  errorText:      { fontSize: FONT_SIZE.xs, fontFamily: FONTS.medium, color: COLORS.bearish, flex: 1 },
+  refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.appBg.card, alignItems: 'center', justifyContent: 'center' },
+  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.bearish.tint, borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bearish + '40' },
+  errorText:      { fontSize: 11, fontFamily: 'Montserrat_500Medium', color: COLORS.bearish, flex: 1 },
   section:        { marginBottom: 14 },
-  card:           { backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border },
-  sectionLabel:   { fontSize: FONT_SIZE.xs, fontFamily: FONTS.bold, color: COLORS.textFaint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
-  historicalText: { fontSize: FONT_SIZE.sm, fontFamily: FONTS.regular, color: COLORS.textSub, lineHeight: 22, marginBottom: 10 },
+  card:           { backgroundColor: COLORS.appBg.card, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border.default },
+  sectionLabel:   { fontSize: 10, fontFamily: 'Montserrat_700Bold', color: COLORS.textPrimary.faint, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+  historicalText: { fontSize: 13, fontFamily: 'Montserrat_400Regular', color: COLORS.textPrimary.muted, lineHeight: 22, marginBottom: 10 },
   disclaimerRow:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  disclaimerText: { fontSize: FONT_SIZE.xs, fontFamily: FONTS.regular, color: COLORS.textFaint },
+  disclaimerText: { fontSize: 11, fontFamily: 'Montserrat_400Regular', color: COLORS.textPrimary.faint },
   shimmerGroup:   { gap: 12 },
-  shimmer:        { height: 12, borderRadius: 6, backgroundColor: COLORS.bgElevated },
-  notFound:       { flex: 1, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText:   { fontSize: FONT_SIZE.sm, fontFamily: FONTS.medium, color: COLORS.textSub },
-  backBtn:        { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.bgCard, borderRadius: 10 },
-  backBtnText:    { fontSize: FONT_SIZE.sm, fontFamily: FONTS.semiBold, color: COLORS.bullish },
+  shimmer:        { height: 12, borderRadius: 6, backgroundColor: COLORS.appBg.elevated },
+  notFound:       { flex: 1, backgroundColor: COLORS.appBg.base, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  notFoundText:   { fontSize: 13, fontFamily: 'Montserrat_500Medium', color: COLORS.textPrimary.muted },
+  backBtn:        { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.appBg.card, borderRadius: 10 },
+  backBtnText:    { fontSize: 13, fontFamily: 'Montserrat_600SemiBold', color: COLORS.bullish },
 });

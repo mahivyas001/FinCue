@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import ta
 from models.analysis import (
-    Signal, Indicators, MACDSignal,
+    SignalType, Indicators, MACDSignal,
     MAPosition, VolumeLevel, TrendStrength
 )
 
@@ -74,7 +74,7 @@ def compute_indicators(df: pd.DataFrame) -> Indicators:
     )
 
 
-def compute_signal(indicators: Indicators, rsi: float) -> tuple[Signal, int]:
+def compute_signal(indicators: Indicators, rsi: float) -> tuple[SignalType, int]:
     """
     Score each indicator and derive overall signal + confidence.
     Bullish = +1, Bearish = -1, Neutral = 0

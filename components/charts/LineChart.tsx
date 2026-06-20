@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, {
   Path, Defs, LinearGradient, Stop, Circle, Text as SvgText,
 } from 'react-native-svg';
-import { Colors, Signal, signalColor } from '@/constants/colors';
+import { COLORS, SignalType, signalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 
 interface ChartPoint {
   date:  string;
@@ -87,7 +88,7 @@ export default function LineChart({ data, height = 160, signal = 'neutral' }: Li
             x={points[idx].x}
             y={height - 8}
             fontSize={10}
-            fill={Colors.text.faint}
+            fill={COLORS.textPrimary.faint}
             fontFamily="Montserrat_400Regular"
             textAnchor={
               pos === 0 ? 'start' :
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize:   12,
-    color:      Colors.text.faint,
+    color:      COLORS.textPrimary.faint,
     fontFamily: 'Montserrat_400Regular',
   },
 });

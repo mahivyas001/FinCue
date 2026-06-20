@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchAnalysis, AnalysisResult } from "@/lib/api/backendApi";
-import { Signal } from "@/types/stock";
+import { SignalType, Signal } from "@/types/stock";
 
 function normalizeSignal(raw: string): Signal {
   const lower = raw.toLowerCase();
@@ -21,7 +21,7 @@ export function useAnalysis(symbol: string | undefined) {
      console.log('[useAnalysis] Fetching for:', symbol); 
     try {
       const data = await fetchAnalysis(symbol);
-      // Normalize signal to lowercase to match our Signal type
+      // Normalize signal to lowercase to match our SignalType
       setAnalysis({
         ...data,
         signal: normalizeSignal(data.signal),

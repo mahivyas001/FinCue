@@ -5,7 +5,8 @@ import {
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
 import { useStockChart } from '@/hooks/useStockChart';
-import { Colors, Signal, signalColor as getSignalColor } from '@/constants/colors';
+import { COLORS, SignalType, signalColor as getSignalColor } from '@/constants/colors';
+import { Signal } from '@/types/stock';
 import { useAppStore } from '@/store/useAppStore';
 
 type Timeframe = '1W' | '1M' | '3M';
@@ -80,11 +81,11 @@ export default function ChartContainer({
       {mode === 'advanced' && (
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.bullish }]} />
             <Text style={styles.legendText}>Bullish</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: Colors.bearish.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.bearish }]} />
             <Text style={styles.legendText}>Bearish</Text>
           </View>
         </View>
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize:   12,
-    color:      Colors.text.muted,
+    color:      COLORS.textPrimary.muted,
     textAlign:  'center',
     fontFamily: 'Montserrat_400Regular',
   },
@@ -127,25 +128,25 @@ const styles = StyleSheet.create({
     paddingVertical:   6,
     borderRadius:      8,
     borderWidth:       1,
-    borderColor:       Colors.border.default,
-    backgroundColor:   Colors.bg.elevated,
+    borderColor:       COLORS.border.default,
+    backgroundColor:   COLORS.appBg.elevated,
   },
   tabText: {
     fontSize:      11,
-    color:         Colors.text.muted,
+    color:         COLORS.textPrimary.muted,
     letterSpacing: 0.8,
     fontFamily:    'Montserrat_600SemiBold',
   },
   modeTag: {
     marginLeft:        'auto',
-    backgroundColor:   Colors.bg.elevated,
+    backgroundColor:   COLORS.appBg.elevated,
     borderRadius:      6,
     paddingHorizontal: 10,
     paddingVertical:   4,
   },
   modeText: {
     fontSize:      10,
-    color:         Colors.text.muted,
+    color:         COLORS.textPrimary.muted,
     letterSpacing: 1.2,
     fontFamily:    'Montserrat_700Bold',
   },
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize:   11,
-    color:      Colors.text.muted,
+    color:      COLORS.textPrimary.muted,
     fontFamily: 'Montserrat_400Regular',
   },
 });

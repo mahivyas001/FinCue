@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Signal, signalColor, signalTint, signalLabel } from '@/constants/colors';
-import { Fonts } from '@/constants/fonts';
+import { COLORS, SignalType, getSignalColor, getSignalBg, signalLabel, signalColor, signalTint } from '@/constants/colors';
+import { Signal } from '@/types/stock';
+import { FONTS } from '@/constants/fonts';
 
 interface SignalBadgeProps {
   signal:      Signal;
@@ -29,7 +30,7 @@ export default function SignalBadge({
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[
         styles.label,
-        { color, fontFamily: Fonts.semiBold },
+        { color, fontFamily: FONTS.semiBold },
         isSm && styles.labelSm,
       ]}>
         {signalLabel(signal)}

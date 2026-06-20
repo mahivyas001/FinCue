@@ -1,3 +1,6 @@
+// app/onboarding.tsx
+// White CTA button, white dot indicator, white selected state — crypto clean
+
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -7,9 +10,12 @@ import {
   FlatList,
   ViewToken,
   StatusBar,
+  StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
+import { COLORS } from '@/constants/colors';
+import { FONTS, FONT_SIZE } from '@/constants/fonts';
 
 const { width } = Dimensions.get('window');
 
@@ -48,81 +54,49 @@ const POPULAR_STOCKS = [
   { symbol: 'AMZN', name: 'Amazon' },
 ];
 
+// ─── Intro Visual ─────────────────────────────────────────────────────────────
+
 function IntroVisual() {
   return (
-    <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-      <View style={{
-        width: 288, height: 176,
-        position: 'relative',
-      }}>
-        <View style={{
-          position: 'absolute', inset: 0,
-          borderRadius: 20,
-          backgroundColor: '#0D0D14',
-          borderWidth: 1,
-          borderColor: 'rgba(147,197,253,0.08)',
-          transform: [{ rotate: '-4deg' }, { translateY: 10 }],
-        }} />
-        <View style={{
-          position: 'absolute', inset: 0,
-          borderRadius: 20,
-          backgroundColor: '#111117',
-          borderWidth: 1,
-          borderColor: 'rgba(147,197,253,0.15)',
-          transform: [{ rotate: '2deg' }, { translateY: 4 }],
-        }} />
-        <View style={{
-          position: 'absolute', inset: 0,
-          borderRadius: 20,
-          backgroundColor: '#111117',
-          borderWidth: 1,
-          borderColor: 'rgba(147,197,253,0.25)',
-          overflow: 'hidden',
-          padding: 16,
-        }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <View>
-              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 18, letterSpacing: 1 }}>AAPL</Text>
-              <Text style={{ color: '#374151', fontSize: 11 }}>Apple Inc.</Text>
-            </View>
-            <View style={{
-              flexDirection: 'row', alignItems: 'center', gap: 6,
-              backgroundColor: 'rgba(147,197,253,0.10)',
-              borderWidth: 1, borderColor: 'rgba(147,197,253,0.25)',
-              borderRadius: 100, paddingHorizontal: 10, paddingVertical: 4,
-            }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#93C5FD' }} />
-              <Text style={{ color: '#93C5FD', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>BULLISH</Text>
-            </View>
+    <View style={styles.introWrapper}>
+      <View style={styles.cardBack2} />
+      <View style={styles.cardBack1} />
+      <View style={styles.cardFront}>
+        <View style={styles.cardHeader}>
+          <View>
+            <Text style={styles.cardSymbol}>AAPL</Text>
+            <Text style={styles.cardCompany}>Apple Inc.</Text>
           </View>
-          <Text style={{ color: '#6B7280', fontSize: 11, lineHeight: 16, marginBottom: 12 }}>
-            "Buyers are showing strong conviction. Momentum building."
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {[
-              { label: 'RSI', value: '68.4', color: '#93C5FD' },
-              { label: 'Trend', value: 'Strong', color: '#93C5FD' },
-              { label: 'Conf.', value: '82%', color: '#FDA4AF' },
-            ].map((item) => (
-              <View key={item.label} style={{
-                flex: 1, backgroundColor: 'rgba(255,255,255,0.03)',
-                borderRadius: 12, padding: 8,
-                borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
-              }}>
-                <Text style={{ color: '#374151', fontSize: 10, marginBottom: 2 }}>{item.label}</Text>
-                <Text style={{ color: item.color, fontSize: 13, fontWeight: '700' }}>{item.value}</Text>
-              </View>
-            ))}
+          <View style={styles.bullishPill}>
+            <View style={styles.bullishDot} />
+            <Text style={styles.bullishText}>BULLISH</Text>
           </View>
+        </View>
+        <Text style={styles.cardQuote}>
+          "Buyers are showing strong conviction. Momentum is building steadily."
+        </Text>
+        <View style={styles.cardStats}>
+          {[
+            { label: 'RSI', value: '68.4' },
+            { label: 'Trend', value: 'Strong' },
+            { label: 'Conf.', value: '82%' },
+          ].map((item) => (
+            <View key={item.label} style={styles.statBox}>
+              <Text style={styles.statLabel}>{item.label}</Text>
+              <Text style={styles.statValue}>{item.value}</Text>
+            </View>
+          ))}
         </View>
       </View>
     </View>
   );
 }
 
+// ─── Mode Visual ──────────────────────────────────────────────────────────────
+
 function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode) => void }) {
   return (
-    <View style={{ width: '100%', gap: 12, paddingVertical: 8 }}>
+    <View style={styles.modeWrapper}>
       {[
         {
           id: 'beginner' as Mode,
@@ -141,41 +115,46 @@ function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode
       ].map((option) => {
         const active = selected === option.id;
         return (
-          <TouchableOpacity key={option.id} onPress={() => onSelect(option.id)} activeOpacity={0.85}>
-            <View style={{
-              borderRadius: 20, padding: 16,
-              backgroundColor: active ? 'rgba(147,197,253,0.06)' : 'rgba(255,255,255,0.02)',
-              borderWidth: 1,
-              borderColor: active ? 'rgba(147,197,253,0.35)' : 'rgba(255,255,255,0.06)',
-            }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <Text style={{ fontSize: 22, marginTop: 2 }}>{option.emoji}</Text>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>{option.title}</Text>
-                    <View style={{
-                      width: 20, height: 20, borderRadius: 10,
-                      borderWidth: 2,
-                      borderColor: active ? '#93C5FD' : '#374151',
-                      backgroundColor: active ? '#93C5FD' : 'transparent',
-                      alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {active && <Text style={{ color: '#09090F', fontSize: 11, fontWeight: '700' }}>✓</Text>}
+          <TouchableOpacity
+            key={option.id}
+            onPress={() => onSelect(option.id)}
+            activeOpacity={0.85}
+            style={[
+              styles.modeCard,
+              active ? styles.modeCardActive : styles.modeCardInactive,
+            ]}
+          >
+            <View style={styles.modeCardInner}>
+              <Text style={styles.modeEmoji}>{option.emoji}</Text>
+              <View style={styles.modeContent}>
+                <View style={styles.modeTitleRow}>
+                  <Text style={styles.modeTitle}>{option.title}</Text>
+                  {/* WHITE checkmark when selected */}
+                  <View style={[
+                    styles.modeCheck,
+                    active ? styles.modeCheckActive : styles.modeCheckInactive,
+                  ]}>
+                    {active && <Text style={styles.modeCheckMark}>✓</Text>}
+                  </View>
+                </View>
+                <Text style={styles.modeDesc}>{option.desc}</Text>
+                <View style={styles.modeTagRow}>
+                  {option.tags.map((tag) => (
+                    <View
+                      key={tag}
+                      style={[
+                        styles.modeTag,
+                        active ? styles.modeTagActive : styles.modeTagInactive,
+                      ]}
+                    >
+                      <Text style={[
+                        styles.modeTagText,
+                        active ? styles.modeTagTextActive : styles.modeTagTextInactive,
+                      ]}>
+                        {tag}
+                      </Text>
                     </View>
-                  </View>
-                  <Text style={{ color: '#6B7280', fontSize: 13, lineHeight: 18, marginBottom: 10 }}>{option.desc}</Text>
-                  <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                    {option.tags.map((tag) => (
-                      <View key={tag} style={{
-                        borderRadius: 100, paddingHorizontal: 8, paddingVertical: 3,
-                        backgroundColor: active ? 'rgba(147,197,253,0.10)' : 'rgba(255,255,255,0.04)',
-                        borderWidth: 1,
-                        borderColor: active ? 'rgba(147,197,253,0.30)' : 'rgba(255,255,255,0.08)',
-                      }}>
-                        <Text style={{ fontSize: 11, color: active ? '#93C5FD' : '#6B7280' }}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
+                  ))}
                 </View>
               </View>
             </View>
@@ -186,40 +165,47 @@ function ModeVisual({ selected, onSelect }: { selected: Mode; onSelect: (m: Mode
   );
 }
 
-function WatchlistVisual({ selected, onToggle }: { selected: string[]; onToggle: (s: string) => void }) {
+// ─── Watchlist Visual ─────────────────────────────────────────────────────────
+
+function WatchlistVisual({
+  selected,
+  onToggle,
+}: {
+  selected: string[];
+  onToggle: (symbol: string) => void;
+}) {
   return (
-    <View style={{ width: '100%', paddingVertical: 12 }}>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
+    <View style={styles.watchlistWrapper}>
+      <View style={styles.stockGrid}>
         {POPULAR_STOCKS.map((stock) => {
           const isSelected = selected.includes(stock.symbol);
           return (
-            <TouchableOpacity key={stock.symbol} onPress={() => onToggle(stock.symbol)} activeOpacity={0.8}>
-              <View style={{
-                borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
-                minWidth: 100, alignItems: 'center',
-                backgroundColor: isSelected ? 'rgba(147,197,253,0.08)' : 'rgba(255,255,255,0.02)',
-                borderWidth: 1,
-                borderColor: isSelected ? 'rgba(147,197,253,0.40)' : 'rgba(255,255,255,0.06)',
-              }}>
-                <Text style={{
-                  fontWeight: '700', fontSize: 13, letterSpacing: 0.5,
-                  color: isSelected ? '#93C5FD' : '#FFFFFF',
-                }}>{stock.symbol}</Text>
-                <Text style={{ color: '#374151', fontSize: 11, marginTop: 2 }}>{stock.name}</Text>
-                {isSelected && (
-                  <View style={{
-                    marginTop: 6, backgroundColor: 'rgba(147,197,253,0.15)',
-                    borderRadius: 100, paddingHorizontal: 8, paddingVertical: 2,
-                  }}>
-                    <Text style={{ color: '#93C5FD', fontSize: 10 }}>✓ added</Text>
-                  </View>
-                )}
-              </View>
+            <TouchableOpacity
+              key={stock.symbol}
+              onPress={() => onToggle(stock.symbol)}
+              activeOpacity={0.8}
+              style={[
+                styles.stockChip,
+                isSelected ? styles.stockChipActive : styles.stockChipInactive,
+              ]}
+            >
+              <Text style={[
+                styles.stockSymbol,
+                isSelected ? styles.stockSymbolActive : styles.stockSymbolInactive,
+              ]}>
+                {stock.symbol}
+              </Text>
+              <Text style={styles.stockName}>{stock.name}</Text>
+              {isSelected && (
+                <View style={styles.stockAdded}>
+                  <Text style={styles.stockAddedText}>✓ added</Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
-      <Text style={{ color: '#374151', fontSize: 12, textAlign: 'center', marginTop: 16 }}>
+      <Text style={styles.watchlistHint}>
         {selected.length === 0
           ? 'Tap any stock to add it to your watchlist'
           : `${selected.length} stock${selected.length > 1 ? 's' : ''} added`}
@@ -228,28 +214,34 @@ function WatchlistVisual({ selected, onToggle }: { selected: string[]; onToggle:
   );
 }
 
+// ─── Dot Indicator — WHITE ────────────────────────────────────────────────────
+
 function DotIndicator({ count, active }: { count: number; active: number }) {
   return (
-    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={styles.dots}>
       {Array.from({ length: count }).map((_, i) => (
-        <View key={i} style={{
-          borderRadius: 100,
-          width: i === active ? 24 : 6,
-          height: 6,
-          backgroundColor: i === active ? '#93C5FD' : '#1F2937',
-        }} />
+        <View
+          key={i}
+          style={[
+            styles.dot,
+            i === active ? styles.dotActive : styles.dotInactive,
+          ]}
+        />
       ))}
     </View>
   );
 }
 
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const { setMode, addToWatchlist, setHasOnboarded } = useAppStore();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedMode, setSelectedMode] = useState<Mode>('beginner');
+  const [currentIndex, setCurrentIndex]   = useState(0);
+  const [selectedMode, setSelectedMode]   = useState<Mode>('beginner');
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
+
   const flatListRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useRef(
@@ -281,67 +273,57 @@ export default function OnboardingScreen() {
     );
   }
 
-  const canProceed =
+  const isLastSlide = currentIndex === SLIDES.length - 1;
+  const canProceed  =
     currentIndex === 0 ||
     currentIndex === 1 ||
     (currentIndex === 2 && selectedStocks.length > 0);
 
   function ctaLabel() {
     if (currentIndex === 0) return 'Get Started →';
-    if (currentIndex === 1) return `Continue as ${selectedMode === 'beginner' ? 'Beginner' : 'Advanced'} →`;
-    if (selectedStocks.length > 0) return `Open FinCue with ${selectedStocks.length} stock${selectedStocks.length > 1 ? 's' : ''} →`;
+    if (currentIndex === 1)
+      return `Continue as ${selectedMode === 'beginner' ? 'Beginner' : 'Advanced'} →`;
+    if (selectedStocks.length > 0)
+      return `Open FinCue with ${selectedStocks.length} stock${selectedStocks.length > 1 ? 's' : ''} →`;
     return 'Select at least one stock';
   }
 
-  function renderSlide({ item }: { item: typeof SLIDES[0] }) {
+  function renderSlide({ item }: { item: (typeof SLIDES)[0] }) {
     return (
-      <View style={{ width, flex: 1, paddingHorizontal: 24, paddingTop: 8 }}>
-        <View style={{
-          alignSelf: 'flex-start',
-          backgroundColor: 'rgba(147,197,253,0.08)',
-          borderWidth: 1, borderColor: 'rgba(147,197,253,0.20)',
-          borderRadius: 100, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 20,
-        }}>
-          <Text style={{ color: '#93C5FD', fontSize: 10, fontWeight: '700', letterSpacing: 2 }}>{item.tag}</Text>
+      <View style={[styles.slide, { width }]}>
+        {/* Tag pill — white bordered */}
+        <View style={styles.tagPill}>
+          <Text style={styles.tagText}>{item.tag}</Text>
         </View>
-        <Text style={{ color: '#FFFFFF', fontSize: 38, fontWeight: '700', lineHeight: 44, marginBottom: 12 }}>
-          {item.headline}
-        </Text>
-        <Text style={{ color: '#6B7280', fontSize: 15, lineHeight: 22, marginBottom: 16 }}>{item.body}</Text>
-        {item.visual === 'intro' && <IntroVisual />}
-        {item.visual === 'mode' && <ModeVisual selected={selectedMode} onSelect={setSelectedMode} />}
+
+        {/* Headline */}
+        <Text style={styles.headline}>{item.headline}</Text>
+
+        {/* Body */}
+        <Text style={styles.body}>{item.body}</Text>
+
+        {/* Per-slide visual */}
+        {item.visual === 'intro'     && <IntroVisual />}
+        {item.visual === 'mode'      && <ModeVisual selected={selectedMode} onSelect={setSelectedMode} />}
         {item.visual === 'watchlist' && <WatchlistVisual selected={selectedStocks} onToggle={toggleStock} />}
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#09090F' }}>
+    <View style={styles.screen}>
       <StatusBar barStyle="light-content" />
 
-      {/* Ambient glow */}
-      <View style={{
-        position: 'absolute', width: 300, height: 300, borderRadius: 150,
-        backgroundColor: 'rgba(147,197,253,0.04)', top: -100, left: -100,
-      }} pointerEvents="none" />
-      <View style={{
-        position: 'absolute', width: 200, height: 200, borderRadius: 100,
-        backgroundColor: 'rgba(253,164,175,0.04)', bottom: 100, right: -60,
-      }} pointerEvents="none" />
-
       {/* Wordmark */}
-      <View style={{ position: 'absolute', top: 56, left: 24, zIndex: 10 }}>
-        <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 20, letterSpacing: -0.5 }}>
-          Fin<Text style={{ color: '#93C5FD' }}>Cue</Text>
+      <View style={styles.wordmark}>
+        <Text style={styles.wordmarkText}>
+          Fin<Text style={styles.wordmarkAccent}>Cue</Text>
         </Text>
       </View>
 
       {/* Skip */}
-      <TouchableOpacity
-        onPress={handleFinish}
-        style={{ position: 'absolute', top: 56, right: 24, zIndex: 10, paddingHorizontal: 12, paddingVertical: 8 }}
-      >
-        <Text style={{ color: '#374151', fontSize: 13 }}>Skip</Text>
+      <TouchableOpacity onPress={handleFinish} activeOpacity={0.7} style={styles.skip}>
+        <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -361,28 +343,23 @@ export default function OnboardingScreen() {
       />
 
       {/* Bottom bar */}
-      <View style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 16, gap: 16 }}>
+      <View style={styles.bottom}>
         <DotIndicator count={SLIDES.length} active={currentIndex} />
+
+        {/* WHITE CTA button — black text */}
         <TouchableOpacity
           onPress={goNext}
           disabled={!canProceed}
-          activeOpacity={0.85}
-          style={{
-            borderRadius: 16, paddingVertical: 16, alignItems: 'center',
-            backgroundColor: canProceed ? '#93C5FD' : 'rgba(147,197,253,0.12)',
-            borderWidth: 1,
-            borderColor: canProceed ? '#93C5FD' : 'rgba(147,197,253,0.20)',
-          }}
+          activeOpacity={0.88}
+          style={[styles.cta, !canProceed && styles.ctaDisabled]}
         >
-          <Text style={{
-            fontWeight: '700', fontSize: 15,
-            color: canProceed ? '#09090F' : 'rgba(147,197,253,0.40)',
-          }}>
+          <Text style={[styles.ctaText, !canProceed && styles.ctaTextDisabled]}>
             {ctaLabel()}
           </Text>
         </TouchableOpacity>
-        {currentIndex === SLIDES.length - 1 && (
-          <Text style={{ color: '#1F2937', fontSize: 11, textAlign: 'center', lineHeight: 16 }}>
+
+        {isLastSlide && (
+          <Text style={styles.disclaimer}>
             FinCue provides analysis and education only. Not financial advice.
           </Text>
         )}
@@ -390,3 +367,394 @@ export default function OnboardingScreen() {
     </View>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  screen: {
+    flex:            1,
+    backgroundColor: '#0A0A0A',
+  },
+  wordmark: {
+    position: 'absolute',
+    top:      56,
+    left:     24,
+    zIndex:   10,
+  },
+  wordmarkText: {
+    fontFamily: FONTS.extraBold,
+    fontSize:   FONT_SIZE.xl,
+    color:      COLORS.white,
+  },
+  wordmarkAccent: {
+    color: COLORS.white,
+    opacity: 0.5,
+  },
+  skip: {
+    position: 'absolute',
+    top:      56,
+    right:    24,
+    zIndex:   10,
+    padding:  8,
+  },
+  skipText: {
+    fontFamily: FONTS.medium,
+    fontSize:   FONT_SIZE.sm,
+    color:      COLORS.textMuted,
+  },
+
+  // ── Slide ──────────────────────────────────────
+  slide: {
+    flex:             1,
+    paddingHorizontal: 24,
+    paddingTop:       8,
+  },
+  tagPill: {
+    alignSelf:        'flex-start',
+    borderWidth:      1,
+    borderColor:      'rgba(255,255,255,0.2)',
+    borderRadius:     100,
+    paddingHorizontal: 12,
+    paddingVertical:  5,
+    marginBottom:     20,
+  },
+  tagText: {
+    fontFamily:    FONTS.bold,
+    fontSize:      FONT_SIZE.xs,
+    color:         'rgba(255,255,255,0.5)',
+    letterSpacing: 2,
+  },
+  headline: {
+    fontFamily:    FONTS.extraBold,
+    fontSize:      FONT_SIZE['3xl'],
+    color:         COLORS.white,
+    lineHeight:    44,
+    marginBottom:  12,
+  },
+  body: {
+    fontFamily:   FONTS.regular,
+    fontSize:     FONT_SIZE.base,
+    color:        COLORS.textSub,
+    lineHeight:   26,
+    marginBottom: 16,
+  },
+
+  // ── Intro card ─────────────────────────────────
+  introWrapper: {
+    alignItems:      'center',
+    justifyContent:  'center',
+    paddingVertical: 24,
+  },
+  cardBack2: {
+    position:        'absolute',
+    width:           280,
+    height:          160,
+    borderRadius:    20,
+    backgroundColor: '#111111',
+    borderWidth:     1,
+    borderColor:     '#222222',
+    transform:       [{ rotate: '-5deg' }, { translateY: 10 }],
+  },
+  cardBack1: {
+    position:        'absolute',
+    width:           280,
+    height:          160,
+    borderRadius:    20,
+    backgroundColor: '#161616',
+    borderWidth:     1,
+    borderColor:     '#222222',
+    transform:       [{ rotate: '2.5deg' }, { translateY: 5 }],
+  },
+  cardFront: {
+    width:           280,
+    borderRadius:    20,
+    backgroundColor: '#1A1A1A',
+    borderWidth:     1,
+    borderColor:     'rgba(255,255,255,0.1)',
+    padding:         16,
+    gap:             10,
+  },
+  cardHeader: {
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+  },
+  cardSymbol: {
+    fontFamily: FONTS.extraBold,
+    fontSize:   FONT_SIZE.lg,
+    color:      COLORS.white,
+  },
+  cardCompany: {
+    fontFamily: FONTS.regular,
+    fontSize:   FONT_SIZE.xs,
+    color:      COLORS.textMuted,
+  },
+  bullishPill: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              6,
+    backgroundColor:  'rgba(162,224,252,0.10)',
+    borderWidth:      1,
+    borderColor:      'rgba(162,224,252,0.25)',
+    borderRadius:     100,
+    paddingHorizontal: 10,
+    paddingVertical:  4,
+  },
+  bullishDot: {
+    width:           6,
+    height:          6,
+    borderRadius:    3,
+    backgroundColor: COLORS.bullish,
+  },
+  bullishText: {
+    fontFamily:    FONTS.bold,
+    fontSize:      FONT_SIZE.xs,
+    color:         COLORS.bullish,
+    letterSpacing: 1,
+  },
+  cardQuote: {
+    fontFamily: FONTS.regular,
+    fontSize:   FONT_SIZE.xs,
+    color:      COLORS.textSub,
+    lineHeight: 18,
+  },
+  cardStats: {
+    flexDirection: 'row',
+    gap:           8,
+  },
+  statBox: {
+    flex:            1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius:    10,
+    padding:         8,
+    gap:             2,
+  },
+  statLabel: {
+    fontFamily: FONTS.medium,
+    fontSize:   10,
+    color:      COLORS.textMuted,
+  },
+  statValue: {
+    fontFamily: FONTS.bold,
+    fontSize:   FONT_SIZE.sm,
+    color:      COLORS.white,
+  },
+
+  // ── Mode cards ─────────────────────────────────
+  modeWrapper: {
+    gap:          12,
+    paddingTop:   8,
+  },
+  modeCard: {
+    borderRadius: 18,
+    borderWidth:  1,
+    padding:      16,
+  },
+  modeCardActive: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor:     'rgba(255,255,255,0.25)',
+  },
+  modeCardInactive: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor:     'rgba(255,255,255,0.07)',
+  },
+  modeCardInner: {
+    flexDirection: 'row',
+    alignItems:    'flex-start',
+    gap:           12,
+  },
+  modeEmoji: {
+    fontSize:  22,
+    marginTop: 2,
+  },
+  modeContent: {
+    flex: 1,
+    gap:  6,
+  },
+  modeTitleRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  modeTitle: {
+    fontFamily: FONTS.bold,
+    fontSize:   FONT_SIZE.base,
+    color:      COLORS.white,
+  },
+  modeCheck: {
+    width:        20,
+    height:       20,
+    borderRadius: 10,
+    borderWidth:  2,
+    alignItems:   'center',
+    justifyContent: 'center',
+  },
+  modeCheckActive: {
+    backgroundColor: COLORS.white,   // white fill when selected
+    borderColor:     COLORS.white,
+  },
+  modeCheckInactive: {
+    backgroundColor: 'transparent',
+    borderColor:     'rgba(255,255,255,0.2)',
+  },
+  modeCheckMark: {
+    fontFamily: FONTS.bold,
+    fontSize:   11,
+    color:      '#0A0A0A',           // black tick on white circle
+  },
+  modeDesc: {
+    fontFamily: FONTS.regular,
+    fontSize:   FONT_SIZE.sm,
+    color:      COLORS.textSub,
+    lineHeight: 20,
+  },
+  modeTagRow: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           6,
+    marginTop:     2,
+  },
+  modeTag: {
+    borderRadius:     100,
+    paddingHorizontal: 10,
+    paddingVertical:  3,
+    borderWidth:      1,
+  },
+  modeTagActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor:     'rgba(255,255,255,0.2)',
+  },
+  modeTagInactive: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor:     'rgba(255,255,255,0.07)',
+  },
+  modeTagText: {
+    fontFamily: FONTS.medium,
+    fontSize:   FONT_SIZE.xs,
+  },
+  modeTagTextActive: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  modeTagTextInactive: {
+    color: COLORS.textMuted,
+  },
+
+  // ── Watchlist ──────────────────────────────────
+  watchlistWrapper: {
+    paddingTop: 8,
+    gap:        12,
+  },
+  stockGrid: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           10,
+    justifyContent: 'center',
+  },
+  stockChip: {
+    borderRadius:     14,
+    borderWidth:      1,
+    paddingHorizontal: 16,
+    paddingVertical:  12,
+    minWidth:         100,
+    alignItems:       'center',
+    gap:              3,
+  },
+  stockChipActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor:     'rgba(255,255,255,0.3)',
+  },
+  stockChipInactive: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor:     'rgba(255,255,255,0.08)',
+  },
+  stockSymbol: {
+    fontFamily:    FONTS.bold,
+    fontSize:      FONT_SIZE.sm,
+    letterSpacing: 0.5,
+  },
+  stockSymbolActive: {
+    color: COLORS.white,
+  },
+  stockSymbolInactive: {
+    color: 'rgba(255,255,255,0.6)',
+  },
+  stockName: {
+    fontFamily: FONTS.regular,
+    fontSize:   10,
+    color:      COLORS.textMuted,
+  },
+  stockAdded: {
+    marginTop:        2,
+    backgroundColor:  'rgba(255,255,255,0.1)',
+    borderRadius:     100,
+    paddingHorizontal: 8,
+    paddingVertical:  2,
+  },
+  stockAddedText: {
+    fontFamily: FONTS.semiBold,
+    fontSize:   10,
+    color:      COLORS.white,
+  },
+  watchlistHint: {
+    fontFamily: FONTS.regular,
+    fontSize:   FONT_SIZE.xs,
+    color:      COLORS.textMuted,
+    textAlign:  'center',
+  },
+
+  // ── Dot indicator — WHITE ──────────────────────
+  dots: {
+    flexDirection:  'row',
+    gap:            8,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    borderRadius: 100,
+  },
+  dotActive: {
+    width:           24,
+    height:          6,
+    backgroundColor: COLORS.white,   // white active dot
+  },
+  dotInactive: {
+    width:           6,
+    height:          6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+
+  // ── Bottom ─────────────────────────────────────
+  bottom: {
+    paddingHorizontal: 24,
+    paddingBottom:     48,
+    paddingTop:        16,
+    gap:               14,
+  },
+
+  // WHITE button — black text
+  cta: {
+    backgroundColor: COLORS.white,
+    borderRadius:    16,
+    paddingVertical: 18,
+    alignItems:      'center',
+  },
+  ctaDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  ctaText: {
+    fontFamily:    FONTS.bold,
+    fontSize:      FONT_SIZE.base,
+    color:         '#0A0A0A',        // black text on white button
+    letterSpacing: 0.3,
+  },
+  ctaTextDisabled: {
+    color: 'rgba(255,255,255,0.25)',
+  },
+  disclaimer: {
+    fontFamily: FONTS.regular,
+    fontSize:   FONT_SIZE.xs,
+    color:      COLORS.textMuted,
+    textAlign:  'center',
+    lineHeight: 18,
+  },
+});

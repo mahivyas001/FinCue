@@ -28,9 +28,9 @@ export const sharedColors = {
 };
 
 export function useTheme() {
-  const { theme } = useAppStore();
-  const isDark = theme === "dark";
-  const colors = isDark ? darkColors : lightColors;
+  const theme = "dark";
+  const isDark = true;
+  const colors = theme === "dark" ? darkColors : lightColors;
 
   return {
     theme,

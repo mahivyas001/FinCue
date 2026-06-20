@@ -1,9 +1,9 @@
 // lib/api/backendApi.ts
 
 import { API_CONFIG } from "@/constants/config";
-import { Signal } from "@/types/stock";
+import { SignalType, Signal } from "@/types/stock";
 
-// Backend returns capitalized — we normalize to lowercase Signal type
+// Backend returns capitalized — we normalize to lowercase SignalType
 export type MACDSignal = "Bullish" | "Bearish" | "Neutral";
 export type MAPosition = "Above" | "Below" | "At";
 export type VolumeLevel = "High" | "Normal" | "Low";

@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, Switch,
   TouchableOpacity, StyleSheet,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
+import { COLORS } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsScreen() {
@@ -40,11 +40,11 @@ export default function SettingsScreen() {
               value={isAdvanced}
               onValueChange={(val) => setMode(val ? 'advanced' : 'beginner')}
               trackColor={{
-                false: Colors.bg.elevated,
-                true:  Colors.bullish.tint,
+                false: COLORS.appBg.elevated,
+                true:  COLORS.bullishBg,
               }}
-              thumbColor={isAdvanced ? Colors.bullish.primary : Colors.text.faint}
-              ios_backgroundColor={Colors.bg.elevated}
+              thumbColor={isAdvanced ? COLORS.bullish : COLORS.textPrimary.faint}
+              ios_backgroundColor={COLORS.appBg.elevated}
             />
           </View>
         </View>
@@ -55,7 +55,7 @@ export default function SettingsScreen() {
             style={[
               styles.modeCard,
               !isAdvanced && styles.modeCardActive,
-              !isAdvanced && { borderColor: Colors.bullish.primary + '55' },
+              !isAdvanced && { borderColor: COLORS.bullish + '55' },
             ]}
             onPress={() => setMode('beginner')}
             activeOpacity={0.75}
@@ -63,7 +63,7 @@ export default function SettingsScreen() {
             <Text style={styles.modeEmoji}>🌱</Text>
             <Text style={[
               styles.modeName,
-              !isAdvanced && { color: Colors.bullish.primary },
+              !isAdvanced && { color: COLORS.bullish },
             ]}>
               Beginner
             </Text>
@@ -76,7 +76,7 @@ export default function SettingsScreen() {
             style={[
               styles.modeCard,
               isAdvanced && styles.modeCardActive,
-              isAdvanced && { borderColor: Colors.bearish.primary + '55' },
+              isAdvanced && { borderColor: COLORS.bearish + '55' },
             ]}
             onPress={() => setMode('advanced')}
             activeOpacity={0.75}
@@ -84,7 +84,7 @@ export default function SettingsScreen() {
             <Text style={styles.modeEmoji}>📊</Text>
             <Text style={[
               styles.modeName,
-              isAdvanced && { color: Colors.bearish.primary },
+              isAdvanced && { color: COLORS.bearish },
             ]}>
               Advanced
             </Text>
@@ -131,23 +131,23 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>Signal Colors</Text>
         <View style={styles.card}>
           <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: Colors.bullish.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.bullish }]} />
             <View>
-              <Text style={[styles.legendName, { color: Colors.bullish.primary }]}>Bullish</Text>
+              <Text style={[styles.legendName, { color: COLORS.bullish }]}>Bullish</Text>
               <Text style={styles.legendDesc}>Positive momentum indicators</Text>
             </View>
           </View>
           <View style={[styles.legendRow, styles.legendRowBorder]}>
-            <View style={[styles.legendDot, { backgroundColor: Colors.bearish.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.bearish }]} />
             <View>
-              <Text style={[styles.legendName, { color: Colors.bearish.primary }]}>Bearish</Text>
+              <Text style={[styles.legendName, { color: COLORS.bearish }]}>Bearish</Text>
               <Text style={styles.legendDesc}>Negative momentum indicators</Text>
             </View>
           </View>
           <View style={[styles.legendRow, styles.legendRowBorder]}>
-            <View style={[styles.legendDot, { backgroundColor: Colors.neutral.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.neutral.primary }]} />
             <View>
-              <Text style={[styles.legendName, { color: Colors.neutral.primary }]}>Neutral</Text>
+              <Text style={[styles.legendName, { color: COLORS.neutral.primary }]}>Neutral</Text>
               <Text style={styles.legendDesc}>No strong directional signal</Text>
             </View>
           </View>
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex:            1,
-    backgroundColor: Colors.bg.base,
+    backgroundColor: COLORS.appBg.base,
   },
   header: {
     paddingHorizontal: 20,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize:      24,
     fontWeight:    '700',
-    color:         Colors.text.primary,
+    color:         COLORS.textPrimary.primary,
     letterSpacing: -0.5,
   },
   content: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize:      10,
-    color:         Colors.text.faint,
+    color:         COLORS.textPrimary.faint,
     letterSpacing: 0.1,
     textTransform: 'uppercase',
     marginBottom:  8,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
 
   // Cards
   card: {
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius:    16,
     padding:         16,
   },
@@ -208,11 +208,11 @@ const styles = StyleSheet.create({
   toggleTitle: {
     fontSize:   14,
     fontWeight: '600',
-    color:      Colors.text.primary,
+    color:      COLORS.textPrimary.primary,
   },
   toggleSub: {
     fontSize:   12,
-    color:      Colors.text.faint,
+    color:      COLORS.textPrimary.faint,
     lineHeight: 18,
   },
 
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   modeCard: {
     flex:            1,
-    backgroundColor: Colors.bg.card,
+    backgroundColor: COLORS.appBg.card,
     borderRadius:    14,
     padding:         14,
     gap:             5,
@@ -241,11 +241,11 @@ const styles = StyleSheet.create({
   modeName: {
     fontSize:   14,
     fontWeight: '600',
-    color:      Colors.text.secondary,
+    color:      COLORS.textPrimary.muted,  // ✅ Fixed: secondary doesn't exist
   },
   modeDesc: {
     fontSize:   11,
-    color:      Colors.text.faint,
+    color:      COLORS.textPrimary.faint,
     lineHeight: 16,
   },
 
@@ -258,22 +258,22 @@ const styles = StyleSheet.create({
   },
   aboutRowBorder: {
     borderTopWidth: 0.5,
-    borderTopColor: Colors.border,
+    borderTopColor: COLORS.border.default,  // ✅ Fixed: was COLORS.border
   },
   aboutLabel: {
     fontSize: 13,
-    color:    Colors.text.muted,
+    color:    COLORS.textPrimary.muted,
   },
   aboutValue: {
     fontSize:   13,
     fontWeight: '500',
-    color:      Colors.text.secondary,
+    color:      COLORS.textPrimary.muted,  // ✅ Fixed: secondary doesn't exist
   },
 
   // Disclaimer
   disclaimerText: {
     fontSize:   12,
-    color:      Colors.text.faint,
+    color:      COLORS.textPrimary.faint,
     lineHeight: 19,
   },
 
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   legendRowBorder: {
     borderTopWidth: 0.5,
-    borderTopColor: Colors.border,
+    borderTopColor: COLORS.border.default,  // ✅ Fixed: was COLORS.border
   },
   legendDot: {
     width:        10,
@@ -300,6 +300,6 @@ const styles = StyleSheet.create({
   },
   legendDesc: {
     fontSize: 11,
-    color:    Colors.text.faint,
+    color:    COLORS.textPrimary.faint,
   },
 });

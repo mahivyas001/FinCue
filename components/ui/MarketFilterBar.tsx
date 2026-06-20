@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
+import { COLORS } from '@/constants/colors';
 
-type MarketFilter = 'All' | 'US' | 'India';
+type MarketFilter = 'All' | 'US' | 'IN';
 
 interface MarketFilterBarProps {
   active:   MarketFilter;
   onChange: (filter: MarketFilter) => void;
 }
 
-const FILTERS: MarketFilter[] = ['All', 'US', 'India'];
+const FILTERS: MarketFilter[] = ['All', 'US', 'IN'];
 
 export default function MarketFilterBar({ active, onChange }: MarketFilterBarProps) {
   return (
@@ -26,8 +26,8 @@ export default function MarketFilterBar({ active, onChange }: MarketFilterBarPro
             style={[
               styles.pill,
               isActive
-                ? { backgroundColor: Colors.bullish.primary }
-                : { backgroundColor: Colors.bg.card },
+                ? { backgroundColor: COLORS.bullish }
+                 : { backgroundColor: COLORS.appBg.card },
             ]}
             onPress={() => onChange(f)}
             activeOpacity={0.75}
@@ -35,10 +35,10 @@ export default function MarketFilterBar({ active, onChange }: MarketFilterBarPro
             <Text
               style={[
                 styles.label,
-                { color: isActive ? '#111111' : Colors.text.dim },
+                { color: isActive ? '#111111' : COLORS.textPrimary.dim },
               ]}
             >
-              {f}
+              {f === 'IN' ? 'India' : f}
             </Text>
           </TouchableOpacity>
         );
