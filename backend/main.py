@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis
 from routers import explain          # ← add this
 from routers import track_record
+from routers import quote            # ← new quote router
 from core.config import settings
 from services.signal_log import init_db
 
@@ -36,6 +37,7 @@ app.add_middleware(
 app.include_router(analysis.router)
 app.include_router(explain.router)   # ← add this
 app.include_router(track_record.router)
+app.include_router(quote.router)     # ← /api/v1/quote/{symbol}
 
 @app.get("/health")
 def health():

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Literal
 
 Signal = Literal["Bullish", "Bearish", "Neutral"]
+SignalType = Signal
 MACDSignal = Literal["Bullish", "Bearish", "Neutral"]
 MAPosition = Literal["Above", "Below", "At"]
 VolumeLevel = Literal["High", "Normal", "Low"]

@@ -42,3 +42,9 @@ yarn-error.*
 
 .env
 backend/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+backend/data/

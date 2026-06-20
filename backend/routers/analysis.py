@@ -11,10 +11,10 @@ from services.signal_log import log_signal, infer_market
 from services.market_data import fetch_daily_series
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/analysis", tags=["analysis"])
+router = APIRouter(tags=["analysis"])
 
 
-@router.get("/debug/{symbol}")
+@router.get("/analysis/debug/{symbol}")
 def debug_av(symbol: str):
     print(f"DEBUG KEY: '{settings.AV_API_KEY}'")
     params = {
@@ -27,7 +27,7 @@ def debug_av(symbol: str):
     return resp.json()
 
 
-@router.get("/{symbol}", response_model=AnalysisResponse)
+@router.get("/analysis/{symbol}", response_model=AnalysisResponse)
 def get_analysis(symbol: str, background_tasks: BackgroundTasks):
     try:
         symbol = symbol.upper().strip()
@@ -50,3 +50,4 @@ def get_analysis(symbol: str, background_tasks: BackgroundTasks):
         logger.error(f"[Exception] {symbol}: {e}\n{tb}")
         print(f"[Exception] {symbol}: {e}\n{tb}")  # force print to terminal
         raise HTTPException(status_code=500, detail=str(e))
+
