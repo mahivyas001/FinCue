@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   changePillText: { fontSize: 13, fontFamily: 'Montserrat_600SemiBold' },
   signalRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   refreshBtn:     { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.appBg.card, alignItems: 'center', justifyContent: 'center' },
-  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.bearish.tint, borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bearish + '40' },
+  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.bearishBg, borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bearishBorder },
   errorText:      { fontSize: 11, fontFamily: 'Montserrat_500Medium', color: COLORS.bearish, flex: 1 },
   section:        { marginBottom: 14 },
   card:           { backgroundColor: COLORS.appBg.card, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border.default },

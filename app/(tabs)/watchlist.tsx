@@ -66,9 +66,9 @@ export default function WatchlistScreen() {
       {/* Error banner */}
       {error && watchlistStocks.length > 0 && (
         <View style={{
-          backgroundColor: COLORS.bearish.tint,
+          backgroundColor: COLORS.bearishBg,
           borderWidth:     1,
-          borderColor:     COLORS.bearish + '40',
+          borderColor:     COLORS.bearishBorder,
           borderRadius:    12,
           padding:         12,
           marginBottom:    16,

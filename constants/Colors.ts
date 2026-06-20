@@ -2,56 +2,45 @@
 
 import { Signal } from '@/types/stock';
 
-const appBg = Object.assign(new String('#0A0A0A'), {
-  base:     '#0A0A0A',
-  card:     '#141414',
-  elevated: '#1A1A1A',
-  overlay:  'rgba(10, 10, 10, 0.97)',
-});
-
-const textPrimary = Object.assign(new String('#FFFFFF'), {
-  primary: '#FFFFFF',
-  muted:   '#9CA3AF',
-  faint:   '#4B5563',
-  dim:     '#9CA3AF',
-});
-
-const bullish = Object.assign(new String('#A2E0FC'), {
-  primary: '#A2E0FC',
-  tint:    'rgba(162, 224, 252, 0.08)',
-  text:    '#C8EDFD',
-});
-
-const bearish = Object.assign(new String('#FB7185'), {
-  primary: '#FB7185',
-  tint:    'rgba(251, 113, 133, 0.08)',
-  text:    '#FCA5A5',
-});
-
-const neutral = Object.assign(new String('#94A3B8'), {
-  primary: '#94A3B8',
-  tint:    'rgba(148, 163, 184, 0.08)',
-  text:    '#9CA3AF',
-});
-
-export const COLORS: any = {
-  appBg,
+export const COLORS = {
+  // ── Backgrounds ─────────────────────────────────
+  appBg: {
+    base:     '#0A0A0A',
+    card:     '#141414',
+    elevated: '#1A1A1A',
+    overlay:  'rgba(10, 10, 10, 0.97)',
+  },
   cardBg:       '#141414',
   card2:        '#1A1A1A',
-  bullish,
-  bearish,
-  neutral,
+
+  // ── Signals ─────────────────────────────────────
+  bullish:      '#A2E0FC',   // ice blue
+  bearish:      '#FB7185',   // blush pink-red
+  neutral:      '#94A3B8',
+
+  // ── Signal tints ────────────────────────────────
   bullishBg:    'rgba(162, 224, 252, 0.08)',
   bullishBorder:'rgba(162, 224, 252, 0.20)',
   bearishBg:    'rgba(251, 113, 133, 0.08)',
   bearishBorder:'rgba(251, 113, 133, 0.20)',
   neutralBg:    'rgba(148, 163, 184, 0.08)',
   neutralBorder:'rgba(148, 163, 184, 0.20)',
-  textPrimary,
+
+  // ── Text ────────────────────────────────────────
+  textPrimary: {
+    primary: '#FFFFFF',
+    muted:   '#9CA3AF',
+    faint:   '#4B5563',
+    dim:     '#9CA3AF',
+  },
   textSub:      '#9CA3AF',
   textMuted:    '#4B5563',
+
+  // ── Utility ─────────────────────────────────────
   white:        '#FFFFFF',
   black:        '#000000',
+
+  // ── Border ──────────────────────────────────────
   border: {
     default: 'rgba(255, 255, 255, 0.06)',
     muted:   'rgba(255, 255, 255, 0.03)',
@@ -72,9 +61,9 @@ export function normalizeSignal(signal: string | undefined): SignalType {
 // ── Color helpers ──────────────────────────────────────────────────────
 export function getSignalColor(signal: SignalType): string {
   switch (signal) {
-    case 'Bullish': return COLORS.bullish.toString();
-    case 'Bearish': return COLORS.bearish.toString();
-    case 'Neutral': return COLORS.neutral.toString();
+    case 'Bullish': return COLORS.bullish;
+    case 'Bearish': return COLORS.bearish;
+    case 'Neutral': return COLORS.neutral;
   }
 }
 

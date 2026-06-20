@@ -213,10 +213,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONTS.extraBold,
     fontSize:   FONT_SIZE['2xl'],
-    color:      COLORS.textPrimary,
+    color:      COLORS.textPrimary.primary,
   },
   titleAccent: {
-    color:   COLORS.textPrimary,
+    color:   COLORS.textPrimary.primary,
     opacity: 0.4,
   },
   modePill: {

@@ -145,9 +145,9 @@ export default function SettingsScreen() {
             </View>
           </View>
           <View style={[styles.legendRow, styles.legendRowBorder]}>
-            <View style={[styles.legendDot, { backgroundColor: COLORS.neutral.primary }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.neutral }]} />
             <View>
-              <Text style={[styles.legendName, { color: COLORS.neutral.primary }]}>Neutral</Text>
+              <Text style={[styles.legendName, { color: COLORS.neutral }]}>Neutral</Text>
               <Text style={styles.legendDesc}>No strong directional signal</Text>
             </View>
           </View>
