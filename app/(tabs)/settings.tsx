@@ -8,7 +8,7 @@ import { COLORS } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsScreen() {
-  const { mode, setMode } = useAppStore();
+  const { mode, setMode, quizzesEnabled, setQuizzesEnabled } = useAppStore();
   const isAdvanced = mode === 'advanced';
   const router = useRouter();
 
@@ -94,6 +94,29 @@ export default function SettingsScreen() {
               RSI, MACD, candlesticks, raw indicator values
             </Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Quiz switch */}
+        <Text style={styles.sectionLabel}>Learning Tools</Text>
+        <View style={styles.card}>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <Text style={styles.toggleTitle}>Reasoning Quizzes</Text>
+              <Text style={styles.toggleSub}>
+                Guess before the AI explains — builds your intuition
+              </Text>
+            </View>
+            <Switch
+              value={quizzesEnabled}
+              onValueChange={setQuizzesEnabled}
+              trackColor={{
+                false: COLORS.appBg.elevated,
+                true:  COLORS.bullishBg,
+              }}
+              thumbColor={quizzesEnabled ? COLORS.bullish : COLORS.textPrimary.faint}
+              ios_backgroundColor={COLORS.appBg.elevated}
+            />
+          </View>
         </View>
 
         {/* Transparency section */}

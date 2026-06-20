@@ -1,10 +1,13 @@
 // components/ui/AIInsightCard.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, SignalType, getSignalColor, signalColor, signalTint } from '@/constants/colors';
 import { Signal } from '@/types/stock';
 import { FONTS } from '@/constants/fonts';
+import { useAppStore } from '@/store/useAppStore';
+import { QUIZ_BANK } from '@/constants/quizBank';
+import ReasoningQuiz from './ReasoningQuiz';
 
 interface AIInsightCardProps {
   signal:        Signal;
@@ -13,6 +16,11 @@ interface AIInsightCardProps {
   triggers?:     string[];
   isBeginnerMode?: boolean;
   isLoading?:    boolean;
+  symbol?:       string;
+  rsi?:          number | null;
+  macdSignal?:   string;
+  maVsLabel?:    string;
+  volLabel?:     string;
 }
 
 export default function AIInsightCard({
@@ -22,7 +30,18 @@ export default function AIInsightCard({
   triggers = [],
   isBeginnerMode = true,
   isLoading = false,
+  symbol,
+  rsi,
+  macdSignal,
+  maVsLabel,
+  volLabel,
 }: AIInsightCardProps) {
+  const [revealed, setRevealed] = useState(false);
+  const quizzesEnabled = useAppStore((s) => s.quizzesEnabled);
+
+  useEffect(() => {
+    setRevealed(false);
+  }, [symbol, signal]);
   const color = signalColor(signal);
   const tint  = signalTint(signal);
 
@@ -36,6 +55,29 @@ export default function AIInsightCard({
       </View>
     );
   }
+
+  // Match quiz
+  let quizKey: string | null = null;
+  if (rsi !== null && rsi !== undefined) {
+    if (rsi > 70) quizKey = 'rsi_overbought';
+    else if (rsi < 30) quizKey = 'rsi_oversold';
+  }
+  if (!quizKey && macdSignal) {
+    if (macdSignal === 'Bullish') quizKey = 'macd_bullish';
+    else if (macdSignal === 'Bearish') quizKey = 'macd_bearish';
+  }
+  if (!quizKey && volLabel === 'High') {
+    quizKey = 'volume_spike';
+  }
+  if (!quizKey && maVsLabel) {
+    if (maVsLabel === 'Above') quizKey = 'ma50_above';
+    else if (maVsLabel === 'Below') quizKey = 'ma50_below';
+  }
+
+  const quizEntry = quizKey ? QUIZ_BANK[quizKey] : null;
+  const showQuiz = !!(quizzesEnabled && !revealed && quizEntry);
+  const modeKey = isBeginnerMode ? 'beginner' : 'advanced';
+  const quizVariant = quizEntry ? quizEntry[modeKey] : null;
 
   return (
     <View style={[styles.card, { borderColor: color + '30', borderWidth: 1 }]}>
@@ -52,21 +94,33 @@ export default function AIInsightCard({
         </View>
       </View>
 
-      {/* Explanation — HERO, big and prominent */}
-      <Text style={styles.explanationHero}>{explanation}</Text>
+      {showQuiz && quizVariant && quizEntry ? (
+        <ReasoningQuiz
+          question={quizVariant.question}
+          options={quizVariant.options}
+          correctOptionId={quizVariant.correctOptionId}
+          explanation={quizVariant.explanation}
+          onAnswered={() => setRevealed(true)}
+        />
+      ) : (
+        <>
+          {/* Explanation — HERO, big and prominent */}
+          <Text style={styles.explanationHero}>{explanation}</Text>
 
-      {/* Triggers checklist */}
-      {triggers.length > 0 && (
-        <View style={styles.triggerList}>
-          {triggers.map((t, i) => (
-            <View key={i} style={styles.triggerRow}>
-              <View style={[styles.checkCircle, { backgroundColor: tint }]}>
-                <Text style={[styles.checkMark, { color }]}>✓</Text>
-              </View>
-              <Text style={styles.triggerText}>{t}</Text>
+          {/* Triggers checklist */}
+          {triggers.length > 0 && (
+            <View style={styles.triggerList}>
+              {triggers.map((t, i) => (
+                <View key={i} style={styles.triggerRow}>
+                  <View style={[styles.checkCircle, { backgroundColor: tint }]}>
+                    <Text style={[styles.checkMark, { color }]}>✓</Text>
+                  </View>
+                  <Text style={styles.triggerText}>{t}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
+          )}
+        </>
       )}
 
       {/* Bottom disclaimer */}

@@ -23,6 +23,9 @@ interface AppState {
 
   hasOnboarded: boolean;
   setHasOnboarded: (value: boolean) => void;
+
+  quizzesEnabled: boolean;
+  setQuizzesEnabled: (value: boolean) => void;
 }
 
 // createJSONStorage() wraps the raw adapter so Zustand gets the correct
@@ -53,6 +56,9 @@ export const useAppStore = create<AppState>()(
 
       hasOnboarded: false,
       setHasOnboarded: (value) => set({ hasOnboarded: value }),
+
+      quizzesEnabled: true,
+      setQuizzesEnabled: (value) => set({ quizzesEnabled: value }),
     }),
     {
       name: 'fincue-app-store',

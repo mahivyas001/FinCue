@@ -188,6 +188,11 @@ export default function StockDetailScreen() {
             explanation={explanationText}
             isBeginnerMode={!isAdvanced}
             isLoading={analysisLoading || explanationLoading}
+            symbol={symbol ?? undefined}
+            rsi={rsi}
+            macdSignal={macdSignal}
+            maVsLabel={maVsLabel}
+            volLabel={volLabel}
           />
         </View>
 
