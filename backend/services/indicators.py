@@ -105,19 +105,21 @@ def compute_signal(indicators: Indicators, rsi: float) -> tuple[SignalType, int]
     max_possible = 3.5
 
     if total > 0.5:
-        signal: Signal = "Bullish"
+        signal: SignalType = "Bullish"
+        confidence = int(50 + (total - 0.5) / (max_possible - 0.5) * (99 - 50))
     elif total < -0.5:
         signal = "Bearish"
+        abs_total = abs(total)
+        confidence = int(50 + (abs_total - 0.5) / (max_possible - 0.5) * (99 - 50))
     else:
         signal = "Neutral"
+        confidence = 50
 
-    # Confidence: how far from 0 relative to max
-    confidence = int(min(abs(total) / max_possible * 100, 99))
-
-    # Trend strength boosts confidence
-    if indicators.trend_strength == "Strong":
-        confidence = min(confidence + 10, 99)
-    elif indicators.trend_strength == "Weak":
-        confidence = max(confidence - 10, 10)
+    # Trend strength modifier
+    if signal != "Neutral":
+        if indicators.trend_strength == "Strong":
+            confidence = min(confidence + 10, 99)
+        elif indicators.trend_strength == "Weak":
+            confidence = max(confidence - 10, 50)
 
     return signal, confidence

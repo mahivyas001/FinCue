@@ -9,7 +9,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis
 from routers import explain          # ← add this
+from routers import track_record
 from core.config import settings
+from services.signal_log import init_db
+
+init_db()
 
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -31,6 +35,7 @@ app.add_middleware(
 
 app.include_router(analysis.router)
 app.include_router(explain.router)   # ← add this
+app.include_router(track_record.router)
 
 @app.get("/health")
 def health():

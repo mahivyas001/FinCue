@@ -3,12 +3,14 @@ import {
   View, Text, ScrollView, Switch,
   TouchableOpacity, StyleSheet,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsScreen() {
   const { mode, setMode } = useAppStore();
   const isAdvanced = mode === 'advanced';
+  const router = useRouter();
 
   return (
     <View style={styles.screen}>
@@ -93,6 +95,24 @@ export default function SettingsScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Transparency section */}
+        <Text style={styles.sectionLabel}>System Transparency</Text>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/track-record' as any)}
+          activeOpacity={0.75}
+        >
+          <View style={styles.navRow}>
+            <View style={styles.navLeft}>
+              <Text style={styles.navTitle}>AI Track Record</Text>
+              <Text style={styles.navSub}>
+                View aggregate honesty and historical accuracy statistics
+              </Text>
+            </View>
+            <Text style={styles.navArrow}>→</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* About section */}
         <Text style={styles.sectionLabel}>About</Text>
@@ -301,5 +321,30 @@ const styles = StyleSheet.create({
   legendDesc: {
     fontSize: 11,
     color:    COLORS.textPrimary.faint,
+  },
+  navRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    gap:            12,
+  },
+  navLeft: {
+    flex: 1,
+    gap:  4,
+  },
+  navTitle: {
+    fontSize:   14,
+    fontWeight: '600',
+    color:      COLORS.textPrimary.primary,
+  },
+  navSub: {
+    fontSize:   12,
+    color:      COLORS.textPrimary.faint,
+    lineHeight: 18,
+  },
+  navArrow: {
+    fontSize:   18,
+    color:      COLORS.textPrimary.faint,
+    fontWeight: '600',
   },
 });
