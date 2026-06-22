@@ -15,8 +15,8 @@ export default function TabLayout() {
           paddingBottom:    18,
           paddingTop:       10,
         },
-        tabBarActiveTintColor:   COLORS.bullish,
-        tabBarInactiveTintColor: COLORS.textPrimary.faint,
+        tabBarActiveTintColor:   COLORS.bullish,            // #A2E0FC — same as MarketFilterBar active pill
+        tabBarInactiveTintColor: COLORS.textPrimary.dim,    // #9CA3AF — same as MarketFilterBar inactive label
         tabBarLabelStyle: {
           fontSize:   10,
           fontWeight: '500',

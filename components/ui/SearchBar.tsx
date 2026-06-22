@@ -27,14 +27,14 @@ export default function SearchBar({
     >
       <Search
         size={16}
-        color={focused ? COLORS.bullish : COLORS.textPrimary.faint}
+        color={focused ? COLORS.bullish : COLORS.textPrimary.muted}
         style={styles.icon}
       />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder} // ← now passed through correctly
-        placeholderTextColor={COLORS.textPrimary.faint}
+        placeholderTextColor={COLORS.textPrimary.muted}
         style={styles.input}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -53,17 +53,17 @@ export default function SearchBar({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.appBg.card,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    flexDirection:     'row',
+    alignItems:        'center',
+    backgroundColor:   COLORS.appBg.card,
+    borderRadius:      16,           // matches StockCard exactly
+    paddingHorizontal: 14,
+    paddingVertical:   12,
+    borderWidth:       1,
+    borderColor:       COLORS.border.default, // visible resting border, same as StockCard
   },
   containerFocused: {
-    borderColor: COLORS.bullish,
+    borderColor: COLORS.bullish,     // accent on focus — same as MarketFilterBar active pill
   },
   icon: {
     marginRight: 8,
