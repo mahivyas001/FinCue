@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, Switch,
   TouchableOpacity, StyleSheet,
@@ -6,11 +6,38 @@ import {
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
+import { requestPushTokenPermission } from '@/hooks/usePushToken';
 
 export default function SettingsScreen() {
-  const { mode, setMode, quizzesEnabled, setQuizzesEnabled } = useAppStore();
+  const {
+    mode,
+    setMode,
+    quizzesEnabled,
+    setQuizzesEnabled,
+    pushToken,
+    alertsEnabled,
+    setPushToken,
+    setAlertsEnabled
+  } = useAppStore();
   const isAdvanced = mode === 'advanced';
   const router = useRouter();
+  const [showPermissionDeniedMsg, setShowPermissionDeniedMsg] = useState(false);
+
+  const handleAlertsToggle = async (val: boolean) => {
+    if (val) {
+      const success = await requestPushTokenPermission(setPushToken);
+      if (success) {
+        setAlertsEnabled(true);
+        setShowPermissionDeniedMsg(false);
+      } else {
+        setAlertsEnabled(false);
+        setShowPermissionDeniedMsg(true);
+      }
+    } else {
+      setAlertsEnabled(false);
+      setShowPermissionDeniedMsg(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -117,6 +144,36 @@ export default function SettingsScreen() {
               ios_backgroundColor={COLORS.appBg.elevated}
             />
           </View>
+        </View>
+
+        {/* Alerts Switch */}
+        <Text style={styles.sectionLabel}>Alerts</Text>
+        <View style={styles.card}>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <Text style={styles.toggleTitle}>Price Alerts</Text>
+              <Text style={styles.toggleSub}>
+                Get notified when a watchlisted stock's signal changes, RSI reaches extremes, or volume spikes.
+              </Text>
+            </View>
+            <Switch
+              value={alertsEnabled}
+              onValueChange={handleAlertsToggle}
+              trackColor={{
+                false: COLORS.appBg.elevated,
+                true:  COLORS.bullishBg,
+              }}
+              thumbColor={alertsEnabled ? COLORS.bullish : COLORS.textPrimary.faint}
+              ios_backgroundColor={COLORS.appBg.elevated}
+            />
+          </View>
+          {showPermissionDeniedMsg && (
+            <View style={styles.warningContainer}>
+              <Text style={styles.warningText}>
+                ⚠️ Notification permission was denied. Please enable notifications in your device system settings to receive alerts.
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Transparency section */}
@@ -369,5 +426,16 @@ const styles = StyleSheet.create({
     fontSize:   18,
     color:      COLORS.textPrimary.faint,
     fontWeight: '600',
+  },
+  warningContainer: {
+    marginTop:      10,
+    paddingTop:     10,
+    borderTopWidth: 0.5,
+    borderTopColor: COLORS.border.default,
+  },
+  warningText: {
+    fontSize:   12,
+    color:      COLORS.bearish,
+    lineHeight: 18,
   },
 });

@@ -2,6 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 import traceback
+import httpx
 
 from services.alert_store import (
     get_all_watched_symbols,
@@ -15,6 +16,24 @@ from services.analysis import analyze
 from services.market_data import fetch_daily_series
 
 logger = logging.getLogger(__name__)
+
+async def send_push_notification(push_token: str, title: str, body: str, data: dict):
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://exp.host/--/api/v2/push/send",
+            json={
+                "to": push_token,
+                "title": title,
+                "body": body,
+                "data": data,  # include {"symbol": symbol} so the
+                                # frontend can navigate on tap
+            },
+            headers={"Content-Type": "application/json"},
+            timeout=10.0,
+        )
+    if resp.status_code != 200:
+        logger.warning(f"Push send failed for {push_token}: {resp.text}")
+    return resp.json()
 
 async def check_for_alerts():
     """
@@ -109,7 +128,16 @@ async def check_for_alerts():
                             triggered_at=now
                         )
                         add_alert_event(token, event)
-                        # In the future: send actual push notification here
+                        # Send real push notification via Expo
+                        try:
+                            await send_push_notification(
+                                push_token=token,
+                                title=f"FinCue Alert: {sym}",
+                                body=alert["msg"],
+                                data={"symbol": sym}
+                            )
+                        except Exception as pe:
+                            logger.error(f"[AlertEngine] Failed to send push to {token}: {pe}")
 
             # Update state regardless
             update_last_known_state(sym, current_state)

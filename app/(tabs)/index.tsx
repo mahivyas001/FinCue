@@ -3,7 +3,7 @@
 // Uses: COLORS.appBg, COLORS.bullish, getSignalColor(), normalizeSignal()
 // No more nested COLORS.bullish.primary / COLORS.bg / COLORS.text
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Bell } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import StockCard from '@/components/stock/StockCard';
 import AIInsightCard from '@/components/ui/AIInsightCard';
@@ -24,6 +26,7 @@ import BehaviorInsightCard from '@/components/insights/BehaviorInsightCard';
 import { FONTS, FONT_SIZE } from '@/constants/fonts';
 import { MOCK_STOCKS } from '@/constants/mockData';
 import { Stock } from '@/types/stock';
+import { fetchRecentAlerts } from '@/lib/api/alerts';
 const mockStocks = MOCK_STOCKS;
 
 type MarketFilter = 'All' | 'US' | 'IN';
@@ -31,6 +34,33 @@ type MarketFilter = 'All' | 'US' | 'IN';
 export default function HomeScreen() {
   const { mode } = useAppStore();
   const [filter, setFilter] = useState<MarketFilter>('All');
+  const router = useRouter();
+  const pushToken = useAppStore((s) => s.pushToken);
+  const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
+
+  useEffect(() => {
+    if (!pushToken) return;
+    const token = pushToken;
+    let active = true;
+
+    async function checkAlerts() {
+      try {
+        const list = await fetchRecentAlerts(token);
+        if (active) {
+          setHasUnreadAlerts(list.length > 0);
+        }
+      } catch (err) {
+        console.error('[Home] Failed to check alerts:', err);
+      }
+    }
+
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [pushToken]);
 
   const activeInsights = useBehaviorStore((s) => s.activeInsights);
   const dismissInsight = useBehaviorStore((s) => s.dismissInsight);
@@ -93,13 +123,23 @@ export default function HomeScreen() {
               Fin<Text style={styles.titleAccent}>Cue</Text>
             </Text>
           </View>
-          <View style={[
-            styles.modePill,
-            mode === 'advanced' && styles.modePillAdvanced,
-          ]}>
-            <Text style={styles.modeText}>
-              {mode === 'beginner' ? '🌱 Beginner' : '⚡ Advanced'}
-            </Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.bellBtn}
+              onPress={() => router.push('/alerts' as any)}
+              activeOpacity={0.75}
+            >
+              <Bell size={18} color={COLORS.textPrimary.primary} />
+              {hasUnreadAlerts && <View style={styles.badgeDot} />}
+            </TouchableOpacity>
+            <View style={[
+              styles.modePill,
+              mode === 'advanced' && styles.modePillAdvanced,
+            ]}>
+              <Text style={styles.modeText}>
+                {mode === 'beginner' ? '🌱 Beginner' : '⚡ Advanced'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -202,7 +242,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection:  'row',
     justifyContent: 'space-between',
-    alignItems:     'flex-start',
+    alignItems:     'center',
   },
   greeting: {
     fontFamily: FONTS.regular,
@@ -218,6 +258,31 @@ const styles = StyleSheet.create({
   titleAccent: {
     color:   COLORS.textPrimary.primary,
     opacity: 0.4,
+  },
+  headerRight: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    gap:            10,
+  },
+  bellBtn: {
+    width:           36,
+    height:          36,
+    borderRadius:    18,
+    backgroundColor: COLORS.appBg.card,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderWidth:     1,
+    borderColor:     COLORS.border.default,
+    position:        'relative',
+  },
+  badgeDot: {
+    position:        'absolute',
+    top:             8,
+    right:           8,
+    width:           8,
+    height:          8,
+    borderRadius:    4,
+    backgroundColor: COLORS.bearish,
   },
   modePill: {
     backgroundColor: 'rgba(255,255,255,0.06)',

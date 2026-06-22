@@ -61,3 +61,7 @@ def add_alert_event(push_token: str, event) -> None:
 def get_recent_alerts(push_token: str) -> list:
     with _alerts_lock:
         return list(_recent_alerts_by_token.get(push_token, []))
+
+def clear_alerts(push_token: str) -> None:
+    with _alerts_lock:
+        _recent_alerts_by_token[push_token] = []

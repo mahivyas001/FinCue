@@ -1,6 +1,5 @@
 // app/_layout.tsx
 // Loads Space Grotesk before rendering anything
-// Run first: npx expo install @expo-google-fonts/space-grotesk expo-font
 
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -14,6 +13,9 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
+import * as Notifications from 'expo-notifications';
+import { usePushToken } from '@/hooks/usePushToken';
+import { useAlertSync } from '@/hooks/useAlertSync';
 import '@/global.css';
 
 function OnboardingGate() {
@@ -45,6 +47,36 @@ export default function RootLayout() {
     SpaceGrotesk_700Bold,
   });
 
+  // Run notification hooks globally
+  usePushToken();
+  useAlertSync();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const symbol = response.notification.request.content.data?.symbol;
+      if (symbol) {
+        console.log(`[Notification Tap] Navigating to stock: ${symbol}`);
+        router.push(`/stock/${symbol}` as any);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
+
   // Hold render until fonts are ready — prevents flash of system font
   if (!fontsLoaded) {
     return <View style={{ flex: 1, backgroundColor: '#0A0A0A' }} />;
@@ -57,6 +89,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="stock/[symbol]" />
+        <Stack.Screen name="alerts" />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>

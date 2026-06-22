@@ -1,10 +1,4 @@
 // store/useAppStore.ts
-//
-// FIRST: run this in your project root:
-//   npx expo install expo-secure-store
-//
-// expo-secure-store is part of the Expo ecosystem but needs an explicit install.
-// createJSONStorage() is the correct Zustand wrapper — fixes the StorageValue type mismatch.
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -26,10 +20,13 @@ interface AppState {
 
   quizzesEnabled: boolean;
   setQuizzesEnabled: (value: boolean) => void;
+
+  pushToken: string | null;
+  alertsEnabled: boolean;
+  setPushToken: (token: string | null) => void;
+  setAlertsEnabled: (enabled: boolean) => void;
 }
 
-// createJSONStorage() wraps the raw adapter so Zustand gets the correct
-// StorageValue type — this is what fixes the ts(2322) incompatibility.
 const storage = createJSONStorage(() => ({
   getItem:    (name: string) => SecureStore.getItemAsync(name),
   setItem:    (name: string, value: string) => SecureStore.setItemAsync(name, value),
@@ -59,6 +56,11 @@ export const useAppStore = create<AppState>()(
 
       quizzesEnabled: true,
       setQuizzesEnabled: (value) => set({ quizzesEnabled: value }),
+
+      pushToken: null,
+      alertsEnabled: false,
+      setPushToken: (token) => set({ pushToken: token }),
+      setAlertsEnabled: (enabled) => set({ alertsEnabled: enabled }),
     }),
     {
       name: 'fincue-app-store',
