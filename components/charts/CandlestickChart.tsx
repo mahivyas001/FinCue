@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
 import { COLORS } from '@/constants/colors';
@@ -15,6 +15,7 @@ interface Candle {
 interface CandlestickChartProps {
   data:    Candle[];
   height?: number;
+  width?:  number;
 }
 
 const CANDLE_W   = 8;
@@ -22,7 +23,7 @@ const CANDLE_GAP = 4;
 const PADDING    = { top: 20, bottom: 40, left: 4, right: 4 };
 const VOL_H      = 28;
 
-export default function CandlestickChart({ data, height = 220 }: CandlestickChartProps) {
+export default function CandlestickChart({ data, height = 220, width }: CandlestickChartProps) {
   if (!data || data.length < 2) {
     return (
       <View style={[styles.empty, { height }]}>
@@ -42,7 +43,8 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
   const labelStep = Math.max(1, Math.floor(data.length / 5));
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <View style={width ? { width } : undefined}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <Svg width={totalW} height={height}>
         {data.map((c, i) => {
           const isUp    = c.close >= c.open;
@@ -68,7 +70,7 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
               <Rect
                 x={x} y={volY}
                 width={CANDLE_W} height={volBarH}
-                fill={color} rx={1} opacity={0.35}
+                fill={color} rx={1} opacity={0.85}
               />
               {i % labelStep === 0 && (
                 <SvgText
@@ -83,7 +85,8 @@ export default function CandlestickChart({ data, height = 220 }: CandlestickChar
           );
         })}
       </Svg>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

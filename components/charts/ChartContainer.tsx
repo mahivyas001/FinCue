@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ActivityIndicator, StyleSheet,
+  View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, LayoutChangeEvent, Dimensions
 } from 'react-native';
 import LineChart from './LineChart';
 import CandlestickChart from './CandlestickChart';
@@ -22,9 +22,14 @@ export default function ChartContainer({
 }: ChartContainerProps) {
   const { mode }    = useAppStore();
   const [tf, setTf] = useState<Timeframe>('1M');
+  const [chartWidth, setChartWidth] = useState<number>(Dimensions.get('window').width);
 
   const { data, isLoading, error, refresh } = useStockChart(symbol, tf);
   const color = getSignalColor(signal);
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    setChartWidth(event.nativeEvent.layout.width);
+  };
 
   if (isLoading) {
     return (
@@ -49,7 +54,7 @@ export default function ChartContainer({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
       <View style={styles.tabRow}>
         {(['1W', '1M', '3M'] as Timeframe[]).map((t) => {
           const active = tf === t;
@@ -74,8 +79,8 @@ export default function ChartContainer({
       </View>
 
       {mode === 'beginner'
-        ? <LineChart data={data} signal={signal} />
-        : <CandlestickChart data={data} />
+        ? <LineChart data={data} width={chartWidth} />
+        : <CandlestickChart data={data} width={chartWidth} />
       }
 
       {mode === 'advanced' && (

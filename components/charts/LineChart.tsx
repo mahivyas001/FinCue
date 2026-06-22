@@ -14,10 +14,9 @@ interface ChartPoint {
 interface LineChartProps {
   data:    ChartPoint[];
   height?: number;
-  signal?: Signal;
+  width?:  number;
 }
 
-const W       = Dimensions.get('window').width - 40;
 const PADDING = { top: 20, bottom: 36, left: 4, right: 4 };
 
 function smooth(points: { x: number; y: number }[]): string {
@@ -32,8 +31,9 @@ function smooth(points: { x: number; y: number }[]): string {
   return d;
 }
 
-export default function LineChart({ data, height = 160, signal = 'neutral' }: LineChartProps) {
-  const color = signalColor(signal);
+export default function LineChart({ data, height = 160, width = Dimensions.get('window').width - 40 }: LineChartProps) {
+  const isUp  = data && data.length > 0 ? data[data.length - 1].close >= data[0].close : true;
+  const color = isUp ? COLORS.bullish : COLORS.bearish;
 
   if (!data || data.length < 2) {
     return (
@@ -43,7 +43,7 @@ export default function LineChart({ data, height = 160, signal = 'neutral' }: Li
     );
   }
 
-  const innerW  = W - PADDING.left - PADDING.right;
+  const innerW  = width - PADDING.left - PADDING.right;
   const innerH  = height - PADDING.top - PADDING.bottom;
   const closes  = data.map((d) => d.close);
   const minVal  = Math.min(...closes);
@@ -68,7 +68,7 @@ export default function LineChart({ data, height = 160, signal = 'neutral' }: Li
 
   return (
     <View>
-      <Svg width={W} height={height}>
+      <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0%"   stopColor={color} stopOpacity={0.22} />
