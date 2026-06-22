@@ -13,10 +13,14 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { usePushToken } from '@/hooks/usePushToken';
 import { useAlertSync } from '@/hooks/useAlertSync';
 import '@/global.css';
+
+// expo-notifications remote push is unavailable in Expo Go SDK 53+.
+// All notification wiring is skipped in that environment.
+const isExpoGo = Constants.appOwnership === 'expo';
 
 function OnboardingGate() {
   const router   = useRouter();
@@ -54,26 +58,34 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+    if (isExpoGo) return; // Push notifications unavailable in Expo Go SDK 53+
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const symbol = response.notification.request.content.data?.symbol;
-      if (symbol) {
-        console.log(`[Notification Tap] Navigating to stock: ${symbol}`);
-        router.push(`/stock/${symbol}` as any);
-      }
+    let sub: { remove(): void } | null = null;
+
+    import('expo-notifications').then((Notifications) => {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+
+      sub = Notifications.addNotificationResponseReceivedListener((response) => {
+        const symbol = response.notification.request.content.data?.symbol;
+        if (symbol) {
+          console.log(`[Notification Tap] Navigating to stock: ${symbol}`);
+          router.push(`/stock/${symbol}` as any);
+        }
+      });
+    }).catch((err) => {
+      console.warn('[RootLayout] expo-notifications load failed:', err);
     });
 
     return () => {
-      subscription.remove();
+      sub?.remove();
     };
   }, [router]);
 

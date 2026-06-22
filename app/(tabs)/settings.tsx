@@ -4,9 +4,12 @@ import {
   TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import { COLORS } from '@/constants/colors';
 import { useAppStore } from '@/store/useAppStore';
 import { requestPushTokenPermission } from '@/hooks/usePushToken';
+
+const isExpoGo = Constants.appOwnership === 'expo';
 
 export default function SettingsScreen() {
   const {
@@ -25,6 +28,11 @@ export default function SettingsScreen() {
 
   const handleAlertsToggle = async (val: boolean) => {
     if (val) {
+      if (isExpoGo) {
+        // Can't request push token in Expo Go SDK 53+
+        setShowPermissionDeniedMsg(true);
+        return;
+      }
       const success = await requestPushTokenPermission(setPushToken);
       if (success) {
         setAlertsEnabled(true);
@@ -170,7 +178,9 @@ export default function SettingsScreen() {
           {showPermissionDeniedMsg && (
             <View style={styles.warningContainer}>
               <Text style={styles.warningText}>
-                ⚠️ Notification permission was denied. Please enable notifications in your device system settings to receive alerts.
+                {isExpoGo
+                  ? '⚠️ Push notifications require a development build — they are not available in Expo Go (SDK 53+). Use `npx expo run:android` or `npx expo run:ios` to test real alerts.'
+                  : '⚠️ Notification permission was denied. Please enable notifications in your device System Settings to receive alerts.'}
               </Text>
             </View>
           )}
