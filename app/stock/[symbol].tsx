@@ -24,6 +24,9 @@ export default function StockDetailScreen() {
   const symbol   = params.symbol as string;
   const router   = useRouter();
 
+  const passedName = params.name as string | undefined;
+  const passedType = params.type as string | undefined;
+
   const mode       = useAppStore(s => s.mode);
   const watchlist  = useAppStore(s => s.watchlist);
   const isAdvanced = mode === 'advanced';
@@ -39,11 +42,32 @@ export default function StockDetailScreen() {
   const isSaved   = watchlist.includes(symbol ?? '');
   const isLoading = quoteLoading || analysisLoading;
 
+  // Fallbacks:
+  const name = stockMeta?.name ?? passedName ?? symbol;
+  const market = stockMeta?.market ?? (symbol.endsWith('.BSE') || symbol.endsWith('.NS') ? 'IN' : 'US');
+
   const price     = stock?.price         ?? stockMeta?.price         ?? 0;
   const change    = stock?.change        ?? stockMeta?.change        ?? 0;
   const changePct = stock?.changePercent ?? stockMeta?.changePercent ?? 0;
-  const currency  = stockMeta?.market === 'IN' ? '₹' : '$';
+  const currency  = market === 'IN' ? '₹' : '$';
   const isPos     = change >= 0;
+
+  let marketLabel = 'NASDAQ';
+  if (stockMeta?.market) {
+    marketLabel = stockMeta.market === 'IN' ? 'NSE' : 'NASDAQ';
+  } else {
+    if (symbol.endsWith('.BSE')) {
+      marketLabel = 'BSE';
+    } else if (symbol.endsWith('.NS')) {
+      marketLabel = 'NSE';
+    } else if (symbol.endsWith('.L')) {
+      marketLabel = 'LSE';
+    } else if (symbol.endsWith('.T')) {
+      marketLabel = 'TSE';
+    } else {
+      marketLabel = symbol === 'JPM' ? 'NYSE' : 'NASDAQ';
+    }
+  }
 
   const signal: Signal = (analysis?.signal ?? 'neutral') as Signal;
   const confidence     = analysis?.confidence ?? 0;
@@ -99,7 +123,8 @@ export default function StockDetailScreen() {
     refreshAnalysis();
   };
 
-  if (!stockMeta && !quoteLoading) {
+  const hasMeta = stockMeta || passedName || stock;
+  if (!hasMeta && !quoteLoading) {
     return (
       <View style={styles.notFound}>
         <Text style={styles.notFoundText}>Stock not found: {symbol}</Text>
@@ -117,7 +142,7 @@ export default function StockDetailScreen() {
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
           <ChevronLeft size={20} color={COLORS.textPrimary.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{stockMeta?.name ?? symbol}</Text>
+        <Text style={styles.headerTitle}>{name}</Text>
         <TouchableOpacity style={styles.iconBtn} onPress={handleToggleWatchlist}>
           <Star
             size={18}
@@ -141,7 +166,7 @@ export default function StockDetailScreen() {
         {/* Price hero */}
         <View style={styles.priceHero}>
           <Text style={styles.symbolLabel}>
-            {symbol} · {stockMeta?.market === 'IN' ? 'NSE' : 'NASDAQ'}
+            {symbol} · {marketLabel}
           </Text>
           <Text style={styles.priceNumber}>
             {currency}{price.toLocaleString('en-US', {

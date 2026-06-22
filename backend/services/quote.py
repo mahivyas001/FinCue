@@ -53,6 +53,35 @@ def _set(key: str, data: dict | pd.DataFrame, ttl: int) -> None:
     _cache[key] = {"data": data, "ts": time.time(), "ttl": ttl}
 
 
+async def search_symbols(query: str) -> list[dict]:
+    """Search Finnhub's global symbol directory."""
+    q_clean = query.upper().strip()
+    cache_key = f"search:{q_clean}"
+    cached = _get(cache_key)
+    if cached is not None:
+        logger.info(f"[Search Cache HIT] {q_clean}")
+        return cached
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"{FINNHUB_BASE}/search",
+            params={"q": query, "token": FINNHUB_KEY},
+            timeout=10.0,
+        )
+    resp.raise_for_status()
+    raw = resp.json()
+    results = [
+        {
+            "symbol": item["symbol"],
+            "name": item["description"],
+            "type": item.get("type", "Common Stock"),
+        }
+        for item in raw.get("result", [])[:20]  # cap results, don't flood the UI
+    ]
+    _set(cache_key, results, 3600)  # cache for 1 hr (3600 seconds)
+    return results
+
+
 # ── LIVE QUOTE ────────────────────────────────────────────────────────────────
 
 async def _fetch_quote_finnhub(symbol: str) -> dict:
@@ -74,11 +103,14 @@ async def _fetch_quote_finnhub(symbol: str) -> dict:
         raise DataProviderError(f"Finnhub: no price data for {symbol}")
 
     change_pct = ((price - pc) / pc * 100) if pc and pc != 0 else 0.0
+    change = price - pc if pc is not None else 0.0
+    market_hours_plausible = not (change == 0.0 and change_pct == 0.0)
 
     return {
-        "price":          round(float(price), 4),
-        "change_percent": round(float(change_pct), 4),
-        "source":         "finnhub",
+        "price":                  round(float(price), 4),
+        "change_percent":         round(float(change_pct), 4),
+        "source":                 "finnhub",
+        "market_hours_plausible": market_hours_plausible,
     }
 
 
@@ -110,11 +142,16 @@ async def _fetch_quote_alpha_vantage(symbol: str) -> dict:
         raise DataProviderError(f"Alpha Vantage: no quote data for {symbol}")
 
     raw_pct = quote.get("10. change percent", "0%").replace("%", "")
+    av_price = float(quote["05. price"])
+    av_change = float(quote.get("09. change", 0.0))
+    av_change_pct = float(raw_pct)
+    market_hours_plausible = not (av_change == 0.0 and av_change_pct == 0.0)
 
     return {
-        "price":          round(float(quote["05. price"]), 4),
-        "change_percent": round(float(raw_pct), 4),
-        "source":         "alpha_vantage_fallback",
+        "price":                  round(av_price, 4),
+        "change_percent":         round(av_change_pct, 4),
+        "source":                 "alpha_vantage_fallback",
+        "market_hours_plausible": market_hours_plausible,
     }
 
 

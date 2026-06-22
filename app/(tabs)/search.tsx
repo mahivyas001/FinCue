@@ -1,19 +1,55 @@
 
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import { useState } from "react";
-import { MOCK_STOCKS } from "@/constants/mockData";
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import { useState, useEffect } from "react";
 import SearchBar from "@/components/ui/SearchBar";
 import StockCard from "@/components/stock/StockCard";
+import { searchSymbols, SearchedSymbol } from "@/lib/api/symbols";
+import { Stock, Market } from "@/types/stock";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchedSymbol[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filtered = MOCK_STOCKS.filter(
-    (stock) =>
-      query.length > 0 &&
-      (stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
-        stock.name.toLowerCase().includes(query.toLowerCase()))
-  );
+  useEffect(() => {
+    if (query.trim().length < 2) {
+      setResults([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const handler = setTimeout(async () => {
+      try {
+        const data = await searchSymbols(query);
+        setResults(data);
+      } catch (err) {
+        console.error("[SearchScreen] search error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 400); // 400ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [query]);
+
+  const mappedResults = results.map((item) => {
+    const isIndian = item.symbol.endsWith('.BSE') || item.symbol.endsWith('.NS');
+    const mapped: Stock = {
+      symbol: item.symbol,
+      name: item.name,
+      price: 0,
+      change: 0,
+      changePercent: 0,
+      signal: "neutral",
+      confidence: 50,
+      market: isIndian ? "IN" : "US",
+    };
+    (mapped as any).type = item.type;
+    return mapped;
+  });
 
   return (
     <KeyboardAvoidingView
@@ -39,23 +75,33 @@ export default function SearchScreen() {
         <SearchBar
           value={query}
           onChangeText={setQuery}
-          onClear={() => setQuery("")}
+          onClear={() => {
+            setQuery("");
+            setResults([]);
+          }}
           placeholder="e.g. AAPL, Reliance..."
         />
 
         {/* Results */}
         <View className="mt-4">
-          {query.length === 0 ? (
+          {query.trim().length < 2 ? (
             <View className="items-center py-16">
               <Text className="text-4xl mb-4">🔎</Text>
               <Text className="text-white font-semibold text-base mb-1">
                 Search for a stock
               </Text>
               <Text className="text-neutral text-sm text-center">
-                Type a stock symbol or company name to get started.
+                Type a stock symbol or company name (min 2 chars) to get started.
               </Text>
             </View>
-          ) : filtered.length === 0 ? (
+          ) : isLoading ? (
+            <View className="items-center py-16">
+              <ActivityIndicator size="large" color="#00B894" />
+              <Text className="text-neutral text-sm text-center mt-4">
+                Searching...
+              </Text>
+            </View>
+          ) : results.length === 0 ? (
             <View className="items-center py-16">
               <Text className="text-4xl mb-4">😕</Text>
               <Text className="text-white font-semibold text-base mb-1">
@@ -68,9 +114,9 @@ export default function SearchScreen() {
           ) : (
             <>
               <Text className="text-neutral text-xs mb-3">
-                {filtered.length} result{filtered.length !== 1 ? "s" : ""} for "{query}"
+                {results.length} result{results.length !== 1 ? "s" : ""} for "{query}"
               </Text>
-              {filtered.map((stock) => (
+              {mappedResults.map((stock) => (
                 <StockCard
                   key={stock.symbol}
                   stock={stock}

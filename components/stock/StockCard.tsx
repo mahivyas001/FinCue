@@ -43,7 +43,10 @@ export default function StockCard({
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/stock/${stock.symbol}` as any)}
+      onPress={() => router.push({
+        pathname: `/stock/${stock.symbol}`,
+        params: { name: stock.name, type: (stock as any).type || 'Common Stock' }
+      } as any)}
       activeOpacity={0.75}
       style={styles.card}
     >

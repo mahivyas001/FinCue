@@ -50,4 +50,17 @@ def get_analysis(symbol: str, background_tasks: BackgroundTasks):
         logger.error(f"[Exception] {symbol}: {e}\n{tb}")
         print(f"[Exception] {symbol}: {e}\n{tb}")  # force print to terminal
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/v1/search")
+async def search_symbols_route(q: str = ""):
+    q_clean = q.strip()
+    if not q_clean or len(q_clean) < 2:
+        return []
+    try:
+        from services.quote import search_symbols
+        return await search_symbols(q_clean)
+    except Exception as e:
+        logger.error(f"[Search Route Error] q={q_clean}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
