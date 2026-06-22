@@ -10,8 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis
 from routers import explain          # ← add this
 from routers import track_record
-from routers import quote            # ← quote router
-from routers import symbols          # ← symbols router
+from routers import quote
+from routers import symbols
+from routers import alerts
 from core.config import settings
 from services.signal_log import init_db
 
@@ -22,10 +23,23 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 
+import asyncio
+from services.alert_engine import alert_scheduler_loop
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the alert background loop
+    task = asyncio.create_task(alert_scheduler_loop())
+    yield
+    # cancel the task on shutdown
+    task.cancel()
+
 app = FastAPI(
     title="FinCue Backend",
     version="0.1.0",
     description="Technical analysis engine for FinCue. AI explains — backend calculates.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -38,8 +52,9 @@ app.add_middleware(
 app.include_router(analysis.router)
 app.include_router(explain.router)   # ← add this
 app.include_router(track_record.router)
-app.include_router(quote.router)     # ← /api/v1/quote/{symbol}
-app.include_router(symbols.router)   # ← /api/v1/symbols/us
+app.include_router(quote.router)
+app.include_router(symbols.router)
+app.include_router(alerts.router)
 
 @app.get("/health")
 def health():
